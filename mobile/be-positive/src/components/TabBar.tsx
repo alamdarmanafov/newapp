@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { colors, radius } from '../theme'
 
-export type TabKey = 'today' | 'history'
+export type TabKey = 'today' | 'history' | 'chat' | 'profile'
 
 interface TabBarProps {
   tab: TabKey
@@ -11,6 +11,8 @@ interface TabBarProps {
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'today', label: 'Bugün' },
   { key: 'history', label: 'Tarixçə' },
+  { key: 'chat', label: 'Söhbət' },
+  { key: 'profile', label: 'Profil' },
 ]
 
 export default function TabBar({ tab, onChange }: TabBarProps) {

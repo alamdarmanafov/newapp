@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 
 import TabBar, { type TabKey } from './src/components/TabBar'
 import TodayScreen from './src/screens/TodayScreen'
 import HistoryScreen from './src/screens/HistoryScreen'
+import ChatScreen from './src/screens/ChatScreen'
+import ProfileScreen from './src/screens/ProfileScreen'
+import AuthScreen from './src/screens/AuthScreen'
+import { AuthProvider, useAuth } from './src/authContext'
 import { deleteEntry, loadEntries, saveEntry } from './src/storage'
 import type { JournalEntry } from './src/types'
 import { colors, radius, shadow } from './src/theme'
 
-export default function App() {
+function MainApp() {
   const [tab, setTab] = useState<TabKey>('today')
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -41,11 +45,10 @@ export default function App() {
         </View>
 
         <View style={styles.content}>
-          {tab === 'today' ? (
-            <TodayScreen onSave={handleSave} />
-          ) : (
-            <HistoryScreen entries={entries} loaded={loaded} onDelete={handleDelete} />
-          )}
+          {tab === 'today' && <TodayScreen onSave={handleSave} />}
+          {tab === 'history' && <HistoryScreen entries={entries} loaded={loaded} onDelete={handleDelete} />}
+          {tab === 'chat' && <ChatScreen />}
+          {tab === 'profile' && <ProfileScreen entries={entries} />}
         </View>
 
         <TabBar tab={tab} onChange={setTab} />
@@ -55,9 +58,37 @@ export default function App() {
   )
 }
 
+function Root() {
+  const { session, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <View style={styles.loadingRoot}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    )
+  }
+
+  return session ? <MainApp /> : <AuthScreen />
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Root />
+    </AuthProvider>
+  )
+}
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingRoot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.background,
   },
   safe: {

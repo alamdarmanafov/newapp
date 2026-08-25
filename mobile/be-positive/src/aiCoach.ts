@@ -1,11 +1,11 @@
-import { API_BASE_URL } from './config'
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from './config'
 import type { MoodKey } from './types'
 
 const REQUEST_TIMEOUT_MS = 12000
 
-// Calls the /api/coach backend (Gemini-powered). Returns null on any failure
-// (network, timeout, missing server key, bad response) so the caller can
-// fall back to the local rule-based coach in coach.ts.
+// Calls the Supabase Edge Function `coach` (Gemini-powered). Returns null on
+// any failure (network, timeout, missing server key, bad response) so the
+// caller can fall back to the local rule-based coach in coach.ts.
 export async function fetchAiCoachMessage(
   mood: MoodKey,
   note: string,
@@ -15,9 +15,13 @@ export async function fetchAiCoachMessage(
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/coach`, {
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/coach`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
       body: JSON.stringify({ mood, note, gratitude }),
       signal: controller.signal,
     })
