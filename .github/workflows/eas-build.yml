@@ -21,6 +21,10 @@ on:
           - production
           - preview
           - development
+      expo_token:
+        description: "Temporary override: Expo access token (leave empty to use the EXPO_TOKEN repo secret)"
+        required: false
+        type: string
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,15 +34,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check EXPO_TOKEN secret reaches this job
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Resolve Expo token
         run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::EXPO_TOKEN secret is EMPTY in this job"
+          TOKEN="${{ inputs.expo_token }}"
+          if [ -n "$TOKEN" ]; then
+            echo "::add-mask::$TOKEN"
+            echo "EXPO_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          elif [ -n "$SECRET_TOKEN" ]; then
+            echo "::add-mask::$SECRET_TOKEN"
+            echo "EXPO_TOKEN=$SECRET_TOKEN" >> "$GITHUB_ENV"
           else
-            echo "EXPO_TOKEN is set, length=${#EXPO_TOKEN}"
+            echo "::error::No Expo token available (neither expo_token input nor EXPO_TOKEN secret)"
+            exit 1
           fi
+        env:
+          SECRET_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
@@ -47,7 +57,6 @@ jobs:
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
 
       - run: npm ci
 
