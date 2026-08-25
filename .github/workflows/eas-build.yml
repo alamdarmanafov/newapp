@@ -30,6 +30,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check EXPO_TOKEN secret reaches this job
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN secret is EMPTY in this job"
+          else
+            echo "EXPO_TOKEN is set, length=${#EXPO_TOKEN}"
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
