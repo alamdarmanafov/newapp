@@ -60,5 +60,15 @@ jobs:
 
       - run: npm ci
 
+      - name: EAS Init (link/create EAS project if needed)
+        run: |
+          if ! grep -q '"projectId"' app.json 2>/dev/null; then
+            eas init --non-interactive --account bepositiveapp
+            echo "--- app.json after eas init ---"
+            cat app.json
+          else
+            echo "projectId already present, skipping eas init"
+          fi
+
       - name: EAS Build
         run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait
