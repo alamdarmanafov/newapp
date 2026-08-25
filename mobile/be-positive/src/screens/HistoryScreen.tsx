@@ -1,5 +1,5 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
-import { colors, radius } from '../theme'
+import { colors, radius, shadow } from '../theme'
 import { MOOD_OPTIONS, type JournalEntry } from '../types'
 
 interface HistoryScreenProps {
@@ -69,12 +69,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderRadius: radius.lg,
-    padding: 16,
+    padding: 18,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 14,
+    ...shadow.soft,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -107,11 +108,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   coachRow: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.primarySoft,
     borderRadius: radius.md,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: colors.secondary,
+    borderLeftColor: colors.accent,
   },
   coachMessage: {
     color: colors.primary,

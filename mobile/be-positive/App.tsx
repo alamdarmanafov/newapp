@@ -7,7 +7,7 @@ import TodayScreen from './src/screens/TodayScreen'
 import HistoryScreen from './src/screens/HistoryScreen'
 import { deleteEntry, loadEntries, saveEntry } from './src/storage'
 import type { JournalEntry } from './src/types'
-import { colors } from './src/theme'
+import { colors, radius, shadow } from './src/theme'
 
 export default function App() {
   const [tab, setTab] = useState<TabKey>('today')
@@ -66,18 +66,22 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary,
     paddingTop: 16,
-    paddingBottom: 20,
+    paddingBottom: 24,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+    ...shadow.card,
   },
   headerTitle: {
     color: '#ffffff',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
+    letterSpacing: 0.2,
   },
   headerSubtitle: {
-    color: colors.secondary,
+    color: colors.accent,
     fontSize: 13,
-    marginTop: 2,
+    marginTop: 4,
     fontWeight: '600',
   },
   content: {

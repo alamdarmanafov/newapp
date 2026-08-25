@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { MOOD_OPTIONS, type MoodKey } from '../types'
-import { colors, radius } from '../theme'
+import { colors, radius, shadow } from '../theme'
 
 interface MoodPickerProps {
   value: MoodKey | null
@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
   item: {
     flex: 1,
     marginHorizontal: 4,
-    paddingVertical: 10,
-    borderRadius: radius.md,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -45,17 +45,19 @@ const styles = StyleSheet.create({
   itemSelected: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+    ...shadow.soft,
   },
   emoji: {
-    fontSize: 24,
+    fontSize: 26,
   },
   label: {
-    marginTop: 4,
+    marginTop: 6,
     fontSize: 12,
     color: colors.muted,
+    fontWeight: '500',
   },
   labelSelected: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: colors.accent,
+    fontWeight: '700',
   },
 })

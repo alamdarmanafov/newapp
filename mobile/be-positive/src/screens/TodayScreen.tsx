@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import MoodPicker from '../components/MoodPicker'
 import { fetchAiCoachMessage } from '../aiCoach'
 import { generateCoachMessage } from '../coach'
-import { colors, radius } from '../theme'
+import { colors, radius, shadow } from '../theme'
 import type { JournalEntry, MoodKey } from '../types'
 
 interface TodayScreenProps {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    padding: 12,
+    padding: 14,
     fontSize: 14,
     color: colors.text,
     backgroundColor: colors.surface,
@@ -137,8 +137,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
     backgroundColor: colors.primary,
     borderRadius: radius.md,
-    paddingVertical: 14,
+    paddingVertical: 15,
     alignItems: 'center',
+    ...shadow.soft,
   },
   primaryButtonDisabled: {
     opacity: 0.4,
@@ -167,15 +168,17 @@ const styles = StyleSheet.create({
   coachCard: {
     marginTop: 20,
     backgroundColor: colors.primary,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: 20,
+    ...shadow.card,
   },
   coachLabel: {
-    color: colors.secondary,
+    color: colors.accent,
     fontWeight: '700',
     fontSize: 13,
     marginBottom: 8,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   coachMessage: {
     color: '#ffffff',
