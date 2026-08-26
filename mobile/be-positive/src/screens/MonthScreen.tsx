@@ -2,12 +2,18 @@ import { useMemo } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { DAY_LABELS, MONTH_NAMES, MOOD_ORDER } from '../i18n/content'
+import { DAY_LABELS, MONTH_NAMES, MOOD_META, MOOD_ORDER } from '../i18n/content'
 import { colors, MOOD_COLORS, radius } from '../theme'
 
 interface MonthScreenProps {
   entries: JournalEntry[]
   onSelectEntry: (entry: JournalEntry) => void
+}
+
+interface Cell {
+  day: number
+  entry: JournalEntry | null
+  isToday: boolean
 }
 
 function dayKey(iso: string) {
@@ -26,6 +32,7 @@ export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
+  const todayIso = now.toISOString().slice(0, 10)
 
   const entryByDay = useMemo(() => {
     const map = new Map<string, JournalEntry>()
@@ -40,16 +47,16 @@ export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps
     const totalDays = new Date(year, month + 1, 0).getDate()
     const leadingBlanks = (first.getDay() + 6) % 7
 
-    const list: ({ entry: JournalEntry | null } | null)[] = Array(leadingBlanks).fill(null)
+    const list: (Cell | null)[] = Array(leadingBlanks).fill(null)
     let logged = 0
     for (let day = 1; day <= totalDays; day++) {
       const iso = new Date(year, month, day).toISOString().slice(0, 10)
       const entry = entryByDay.get(iso) ?? null
       if (entry) logged += 1
-      list.push({ entry })
+      list.push({ day, entry, isToday: iso === todayIso })
     }
     return { cells: list, loggedCount: logged, daysInMonth: totalDays }
-  }, [entryByDay, year, month])
+  }, [entryByDay, year, month, todayIso])
 
   const monthAverage = useMemo(() => {
     const values = entries
@@ -61,28 +68,41 @@ export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{monthNames[month]}</Text>
+      <Text style={styles.title}>
+        {monthNames[month]} {year}
+      </Text>
       <Text style={styles.subtitle}>{t('month.subtitle', { total: daysInMonth, logged: loggedCount })}</Text>
 
-      <View style={styles.grid}>
-        {dayLabels.map((d) => (
-          <Text key={d} style={styles.dayHeader}>
-            {d}
-          </Text>
-        ))}
-        {cells.map((cell, i) => {
-          if (!cell) return <View key={i} style={[styles.cell, { backgroundColor: 'transparent' }]} />
-          const entry = cell.entry
-          const color = entry ? MOOD_COLORS[moodIndex(entry)] : colors.surface
-          return (
-            <Pressable
-              key={i}
-              disabled={!entry}
-              onPress={() => entry && onSelectEntry(entry)}
-              style={[styles.cell, { backgroundColor: color }]}
-            />
-          )
-        })}
+      <View style={styles.calendarCard}>
+        <View style={styles.dayHeaderRow}>
+          {dayLabels.map((d) => (
+            <Text key={d} style={styles.dayHeader}>
+              {d}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.grid}>
+          {cells.map((cell, i) => {
+            if (!cell) return <View key={i} style={styles.cell} />
+            const { day, entry, isToday } = cell
+            return (
+              <Pressable
+                key={i}
+                disabled={!entry}
+                onPress={() => entry && onSelectEntry(entry)}
+                style={styles.cell}
+              >
+                <View style={[styles.dayNumberWrap, isToday && styles.dayNumberWrapToday]}>
+                  <Text style={[styles.dayNumber, isToday && styles.dayNumberToday]}>{day}</Text>
+                </View>
+                <View style={styles.dayEmojiSlot}>
+                  {entry && <Text style={styles.dayEmoji}>{MOOD_META[entry.mood].emoji}</Text>}
+                </View>
+              </Pressable>
+            )
+          })}
+        </View>
       </View>
 
       <View style={styles.legendRow}>
@@ -126,21 +146,67 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginBottom: 20,
   },
+  calendarCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    backgroundColor: colors.background,
+  },
+  dayHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  dayHeader: {
+    width: '14.2857%',
+    textAlign: 'center',
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: colors.muted,
+    paddingVertical: 8,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-  },
-  dayHeader: {
-    width: '12.28%',
-    textAlign: 'center',
-    fontSize: 10,
-    color: colors.muted,
   },
   cell: {
-    width: '12.28%',
-    aspectRatio: 1,
-    borderRadius: 8,
+    width: '14.2857%',
+    aspectRatio: 0.85,
+    alignItems: 'center',
+    paddingTop: 6,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  dayNumberWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayNumberWrapToday: {
+    backgroundColor: colors.primary,
+  },
+  dayNumber: {
+    fontSize: 12,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  dayNumberToday: {
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  dayEmojiSlot: {
+    marginTop: 4,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayEmoji: {
+    fontSize: 16,
   },
   legendRow: {
     flexDirection: 'row',

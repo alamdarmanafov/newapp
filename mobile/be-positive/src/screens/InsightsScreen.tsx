@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { DAY_LABELS, MOOD_ORDER, factorLabel } from '../i18n/content'
+import { DAY_LABELS, MOOD_ORDER, factorEmoji, factorLabel } from '../i18n/content'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 interface InsightsScreenProps {
@@ -100,10 +100,16 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{t('insights.title')}</Text>
+      <Text style={styles.subtitle}>{t('insights.subtitle')}</Text>
 
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartLabel}>{t('insights.weekLabel')}</Text>
+          <View style={styles.chartHeaderLeft}>
+            <View style={styles.chartIconWrap}>
+              <Text style={styles.chartIcon}>📈</Text>
+            </View>
+            <Text style={styles.chartLabel}>{t('insights.weekLabel')}</Text>
+          </View>
           <Text style={styles.chartValue}>{weekAverage === null ? '—' : (weekAverage + 1).toFixed(1)}</Text>
         </View>
 
@@ -126,7 +132,10 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
 
       {topFactorInsight && (
         <View style={styles.patternCard}>
-          <Text style={styles.patternTag}>{t('insights.patternTag')}</Text>
+          <View style={styles.patternTagRow}>
+            <Text style={styles.patternSparkle}>✨</Text>
+            <Text style={styles.patternTag}>{t('insights.patternTag')}</Text>
+          </View>
           <Text style={styles.patternText}>
             {t(topFactorInsight.diff >= 0 ? 'insights.patternHigh' : 'insights.patternLow', {
               factor: factorLabel(topFactorInsight.factor, locale),
@@ -138,6 +147,9 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
 
       {topFactor && (
         <View style={styles.rowCard}>
+          <View style={styles.rowIconWrap}>
+            <Text style={styles.rowIcon}>{factorEmoji(topFactor.factor)}</Text>
+          </View>
           <View>
             <Text style={styles.rowLabel}>{t('insights.topFactorLabel')}</Text>
             <Text style={styles.rowValue}>
@@ -164,7 +176,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: colors.text,
-    marginBottom: 16,
+  },
+  subtitle: {
+    marginTop: 4,
+    marginBottom: 20,
+    fontSize: 13,
+    color: colors.muted,
+    lineHeight: 18,
   },
   chartCard: {
     padding: 18,
@@ -176,8 +194,24 @@ const styles = StyleSheet.create({
   },
   chartHeader: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  chartHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  chartIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartIcon: {
+    fontSize: 15,
   },
   chartLabel: {
     fontSize: 12.5,
@@ -206,6 +240,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  patternTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  patternSparkle: {
+    fontSize: 13,
+  },
   patternTag: {
     fontSize: 11,
     fontWeight: '700',
@@ -226,6 +268,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  rowIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowIcon: {
+    fontSize: 20,
   },
   rowLabel: {
     fontSize: 12.5,

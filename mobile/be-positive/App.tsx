@@ -21,7 +21,8 @@ import { colors } from './src/theme'
 const ONBOARDING_KEY = 'be-positive/onboarding-seen'
 
 function MainApp() {
-  const [tab, setTab] = useState<TabKey>('today')
+  const [tab, setTab] = useState<TabKey>('insights')
+  const [showToday, setShowToday] = useState(true)
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loaded, setLoaded] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
@@ -52,11 +53,21 @@ function MainApp() {
     setSelectedEntry(null)
   }, [])
 
+  if (showToday) {
+    return (
+      <View style={styles.root}>
+        <SafeAreaView style={styles.safe}>
+          <TodayScreen entries={entries} onSave={handleSave} streak={streak} onDone={() => setShowToday(false)} />
+        </SafeAreaView>
+        <StatusBar style="dark" />
+      </View>
+    )
+  }
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
-          {tab === 'today' && <TodayScreen entries={entries} onSave={handleSave} streak={streak} />}
           {tab === 'insights' && <InsightsScreen entries={entries} />}
           {tab === 'chat' && <ChatScreen />}
           {tab === 'month' && <MonthScreen entries={entries} onSelectEntry={setSelectedEntry} />}

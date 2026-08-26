@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
 import { MOOD_META } from '../i18n/content'
@@ -7,9 +7,10 @@ import { colors, radius, shadow } from '../theme'
 interface TodayLoggedScreenProps {
   entry: JournalEntry
   streak: number
+  onContinue: () => void
 }
 
-export default function TodayLoggedScreen({ entry, streak }: TodayLoggedScreenProps) {
+export default function TodayLoggedScreen({ entry, streak, onContinue }: TodayLoggedScreenProps) {
   const { t } = useLocale()
   const mood = MOOD_META[entry.mood]
 
@@ -45,6 +46,12 @@ export default function TodayLoggedScreen({ entry, streak }: TodayLoggedScreenPr
             </View>
           </View>
         )}
+      </View>
+
+      <View style={styles.footer}>
+        <Pressable onPress={onContinue} style={styles.continueButton}>
+          <Text style={styles.continueButtonText}>{t('todayLogged.continue')}</Text>
+        </Pressable>
       </View>
     </View>
   )
@@ -146,5 +153,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12.5,
     color: colors.muted,
+  },
+  footer: {
+    padding: 24,
+  },
+  continueButton: {
+    borderRadius: radius.xl,
+    paddingVertical: 16,
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    ...shadow.card,
+  },
+  continueButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 })

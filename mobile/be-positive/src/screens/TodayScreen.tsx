@@ -15,11 +15,12 @@ interface TodayScreenProps {
   entries: JournalEntry[]
   onSave: (entry: JournalEntry) => void
   streak: number
+  onDone: () => void
 }
 
 type Step = 'checkin' | 'factors' | 'saved'
 
-export default function TodayScreen({ entries, onSave, streak }: TodayScreenProps) {
+export default function TodayScreen({ entries, onSave, streak, onDone }: TodayScreenProps) {
   const { locale } = useLocale()
   const [step, setStep] = useState<Step>('checkin')
   const [moodIndex, setMoodIndex] = useState(2)
@@ -71,6 +72,7 @@ export default function TodayScreen({ entries, onSave, streak }: TodayScreenProp
     setGratitude('')
     setCoachMessage(null)
     setSavedEntry(null)
+    onDone()
   }
 
   // Only one check-in per day: once today already has an entry (either from
@@ -78,7 +80,7 @@ export default function TodayScreen({ entries, onSave, streak }: TodayScreenProp
   // of letting the mood picker open again. Resets automatically once the
   // date changes.
   if (step === 'checkin' && loggedToday) {
-    return <TodayLoggedScreen entry={loggedToday} streak={streak} />
+    return <TodayLoggedScreen entry={loggedToday} streak={streak} onContinue={onDone} />
   }
 
   return (
