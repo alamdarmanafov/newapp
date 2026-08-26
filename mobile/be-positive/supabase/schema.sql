@@ -88,8 +88,13 @@ create policy "Users can add their own place check-ins"
   on public.place_moods for insert
   with check (auth.uid() = user_id);
 
--- No select policy: nobody (not even the row's own owner) can read raw
--- place_moods rows directly. All reads go through the aggregate function.
+-- A user can read back their own check-ins (used for their personal
+-- "best place" stat in Profile) but never anyone else's -- other users'
+-- data is only ever visible in already-anonymous aggregate form, via the
+-- function below.
+create policy "Users can read their own place check-ins"
+  on public.place_moods for select
+  using (auth.uid() = user_id);
 
 create or replace function public.place_mood_aggregates(
   min_lat double precision,

@@ -49,3 +49,30 @@ export async function fetchPlaceAggregates(bounds: MapBounds, category: string |
     count: row.entry_count,
   }))
 }
+
+export interface MyPlaceCategoryStat {
+  category: string
+  avgMood: number
+  count: number
+}
+
+// A user's own check-ins, grouped by category, best mood first. Used for
+// the personal "where do you feel best" stat in Profile -- unlike the map,
+// this reads the user's own rows directly (allowed by RLS for the owner
+// only), not the anonymous aggregate function.
+export async function fetchMyPlaceCategoryStats(userId: string): Promise<MyPlaceCategoryStat[]> {
+  const { data, error } = await supabase.from('place_moods').select('category, mood').eq('user_id', userId)
+  if (error || !data) return []
+
+  const byCategory = new Map<string, { sum: number; count: number }>()
+  for (const row of data as { category: string; mood: number }[]) {
+    const current = byCategory.get(row.category) ?? { sum: 0, count: 0 }
+    current.sum += row.mood
+    current.count += 1
+    byCategory.set(row.category, current)
+  }
+
+  return Array.from(byCategory.entries())
+    .map(([category, stat]) => ({ category, avgMood: stat.sum / stat.count, count: stat.count }))
+    .sort((a, b) => b.avgMood - a.avgMood)
+}

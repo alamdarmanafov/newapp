@@ -1,13 +1,24 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { DAY_LABELS, MOOD_ORDER, factorEmoji, factorLabel } from '../i18n/content'
+import {
+  DAY_LABELS,
+  MOOD_ORDER,
+  PLACE_CATEGORIES,
+  TIME_OF_DAY_BUCKETS,
+  factorEmoji,
+  factorLabel,
+  placeCategoryLabel,
+  timeOfDayBucketForHour,
+} from '../i18n/content'
+import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 interface InsightsSectionProps {
   entries: JournalEntry[]
+  userId?: string
 }
 
 function moodIndex(entry: JournalEntry) {
@@ -20,9 +31,14 @@ function startOfDay(date: Date) {
   return d
 }
 
-export default function InsightsSection({ entries }: InsightsSectionProps) {
+export default function InsightsSection({ entries, userId }: InsightsSectionProps) {
   const { t, locale } = useLocale()
   const dayLabels = DAY_LABELS[locale]
+  const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
+
+  useEffect(() => {
+    if (userId) fetchMyPlaceCategoryStats(userId).then(setPlaceStats)
+  }, [userId])
 
   const week = useMemo(() => {
     const today = startOfDay(new Date())
@@ -90,6 +106,44 @@ export default function InsightsSection({ entries }: InsightsSectionProps) {
     return best
   }, [entries])
 
+  const bestDaysStats = useMemo(() => {
+    const now = new Date()
+    const startOfWeek = startOfDay(now)
+    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7))
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+
+    const countGoodSince = (since: Date) =>
+      entries.filter((e) => moodIndex(e) >= 3 && new Date(e.createdAt) >= since).length
+
+    return {
+      week: countGoodSince(startOfWeek),
+      month: countGoodSince(startOfMonth),
+      year: countGoodSince(startOfYear),
+    }
+  }, [entries])
+
+  const bestTimeOfDay = useMemo(() => {
+    const sums = new Map<string, { sum: number; count: number }>()
+    for (const entry of entries) {
+      const bucket = timeOfDayBucketForHour(new Date(entry.createdAt).getHours())
+      const current = sums.get(bucket.id) ?? { sum: 0, count: 0 }
+      current.sum += moodIndex(entry)
+      current.count += 1
+      sums.set(bucket.id, current)
+    }
+
+    let best: { id: string; avg: number } | null = null
+    for (const [id, stat] of sums) {
+      if (stat.count < 2) continue
+      const avg = stat.sum / stat.count
+      if (!best || avg > best.avg) best = { id, avg }
+    }
+    return best
+  }, [entries])
+
+  const bestPlace = placeStats[0] ?? null
+
   const points = week.map((d, i) => ({
     x: 26 + i * 34,
     y: d.avg === null ? null : 96 - d.avg * 18,
@@ -130,6 +184,21 @@ export default function InsightsSection({ entries }: InsightsSectionProps) {
         </View>
       </View>
 
+      <View style={styles.goodDaysRow}>
+        <View style={styles.goodDaysTile}>
+          <Text style={styles.goodDaysValue}>{bestDaysStats.week}</Text>
+          <Text style={styles.goodDaysLabel}>{t('insights.goodDaysWeek')}</Text>
+        </View>
+        <View style={styles.goodDaysTile}>
+          <Text style={styles.goodDaysValue}>{bestDaysStats.month}</Text>
+          <Text style={styles.goodDaysLabel}>{t('insights.goodDaysMonth')}</Text>
+        </View>
+        <View style={styles.goodDaysTile}>
+          <Text style={styles.goodDaysValue}>{bestDaysStats.year}</Text>
+          <Text style={styles.goodDaysLabel}>{t('insights.goodDaysYear')}</Text>
+        </View>
+      </View>
+
       {topFactorInsight && (
         <View style={styles.patternCard}>
           <View style={styles.patternTagRow}>
@@ -158,6 +227,41 @@ export default function InsightsSection({ entries }: InsightsSectionProps) {
           </View>
         </View>
       )}
+
+      {bestTimeOfDay &&
+        (() => {
+          const bucket = TIME_OF_DAY_BUCKETS.find((b) => b.id === bestTimeOfDay.id)
+          if (!bucket) return null
+          return (
+            <View style={styles.rowCard}>
+              <View style={styles.rowIconWrap}>
+                <Text style={styles.rowIcon}>{bucket.emoji}</Text>
+              </View>
+              <View>
+                <Text style={styles.rowLabel}>{t('insights.bestTimeLabel')}</Text>
+                <Text style={styles.rowValue}>{bucket[locale]}</Text>
+              </View>
+            </View>
+          )
+        })()}
+
+      {bestPlace &&
+        (() => {
+          const category = PLACE_CATEGORIES.find((c) => c.id === bestPlace.category)
+          return (
+            <View style={styles.rowCard}>
+              <View style={styles.rowIconWrap}>
+                <Text style={styles.rowIcon}>{category?.emoji ?? '📍'}</Text>
+              </View>
+              <View>
+                <Text style={styles.rowLabel}>{t('insights.bestPlaceLabel')}</Text>
+                <Text style={styles.rowValue}>
+                  {placeCategoryLabel(bestPlace.category, locale)} · {bestPlace.count} {t('insights.bestPlaceTimesSuffix')}
+                </Text>
+              </View>
+            </View>
+          )
+        })()}
 
       {entries.length === 0 && <Text style={styles.empty}>{t('insights.empty')}</Text>}
     </View>
@@ -228,6 +332,32 @@ const styles = StyleSheet.create({
   dayLabel: {
     fontSize: 10,
     color: colors.muted,
+  },
+  goodDaysRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  goodDaysTile: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  goodDaysValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  goodDaysLabel: {
+    marginTop: 4,
+    fontSize: 11,
+    color: colors.muted,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   patternCard: {
     marginTop: 14,

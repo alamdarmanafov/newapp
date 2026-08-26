@@ -116,7 +116,7 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         </View>
       </View>
 
-      <InsightsSection entries={entries} />
+      <InsightsSection entries={entries} userId={userId} />
 
       <View style={styles.settingsGroup}>
         <View style={styles.settingRow}>

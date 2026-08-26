@@ -65,6 +65,30 @@ export function placeCategoryLabel(id: string, locale: Locale): string {
   return PLACE_CATEGORIES.find((c) => c.id === id)?.[locale] ?? id
 }
 
+export interface TimeOfDayBucket {
+  id: string
+  emoji: string
+  az: string
+  en: string
+  startHour: number
+  endHour: number
+}
+
+// endHour <= startHour wraps past midnight (e.g. night: 22 -> 6).
+export const TIME_OF_DAY_BUCKETS: TimeOfDayBucket[] = [
+  { id: 'morning', emoji: '🌅', az: 'Səhər', en: 'Morning', startHour: 6, endHour: 12 },
+  { id: 'afternoon', emoji: '☀️', az: 'Günorta', en: 'Afternoon', startHour: 12, endHour: 17 },
+  { id: 'evening', emoji: '🌇', az: 'Axşam', en: 'Evening', startHour: 17, endHour: 22 },
+  { id: 'night', emoji: '🌙', az: 'Gecə', en: 'Night', startHour: 22, endHour: 6 },
+]
+
+export function timeOfDayBucketForHour(hour: number): TimeOfDayBucket {
+  const match = TIME_OF_DAY_BUCKETS.find((b) =>
+    b.startHour < b.endHour ? hour >= b.startHour && hour < b.endHour : hour >= b.startHour || hour < b.endHour
+  )
+  return match ?? TIME_OF_DAY_BUCKETS[3]
+}
+
 export function moodLabel(key: MoodKey, locale: Locale): string {
   return MOOD_META[key][locale]
 }
