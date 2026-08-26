@@ -41,7 +41,14 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.360468046824-1dp6cc53joq20l1tsh47fabk56eujb3t"
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Bu yerdə əhval-ruhiyyəni xəritəyə əlavə etmək üçün məkanından istifadə olunur."
+        }
+      ],
+      "react-native-maps"
     ],
     "extra": {
       "eas": {

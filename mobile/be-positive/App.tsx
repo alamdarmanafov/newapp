@@ -8,6 +8,7 @@ import TodayScreen from './src/screens/TodayScreen'
 import InsightsScreen from './src/screens/InsightsScreen'
 import MonthScreen from './src/screens/MonthScreen'
 import ChatScreen from './src/screens/ChatScreen'
+import PlacesScreen from './src/screens/PlacesScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
 import AuthScreen from './src/screens/AuthScreen'
 import OnboardingScreen from './src/screens/OnboardingScreen'
@@ -89,6 +90,7 @@ function MainApp({ userId }: MainAppProps) {
           {tab === 'insights' && <InsightsScreen entries={entries} onRefresh={handleRefreshEntries} />}
           {tab === 'chat' && <ChatScreen />}
           {tab === 'month' && <MonthScreen entries={entries} onSelectEntry={setSelectedEntry} onRefresh={handleRefreshEntries} />}
+          {tab === 'places' && <PlacesScreen />}
           {tab === 'profile' && <ProfileScreen entries={entries} onRefresh={handleRefreshEntries} />}
         </View>
 

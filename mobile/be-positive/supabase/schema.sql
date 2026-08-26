@@ -60,3 +60,56 @@ create policy "Users can delete their own push token"
 
 -- The daily-notification Edge Function reads all tokens using the
 -- service role key, which bypasses RLS.
+
+-- "Xəritə" tab: anonymous, aggregate-only place-mood check-ins ("how do
+-- people feel here?"). Users can insert their own check-ins, but can never
+-- select raw rows -- only the place_mood_aggregates() function below can
+-- read the table (it runs as security definer), and it only ever returns
+-- grouped buckets with at least 3 contributors, never individual rows,
+-- timestamps, or user ids. This is deliberately separate from journal
+-- entries, which stay device-only and are never uploaded.
+
+create table if not exists public.place_moods (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  lat double precision not null,
+  lng double precision not null,
+  mood smallint not null check (mood between 0 and 4),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists place_moods_lat_lng_idx on public.place_moods (lat, lng);
+
+alter table public.place_moods enable row level security;
+
+create policy "Users can add their own place check-ins"
+  on public.place_moods for insert
+  with check (auth.uid() = user_id);
+
+-- No select policy: nobody (not even the row's own owner) can read raw
+-- place_moods rows directly. All reads go through the aggregate function.
+
+create or replace function public.place_mood_aggregates(
+  min_lat double precision,
+  max_lat double precision,
+  min_lng double precision,
+  max_lng double precision
+)
+returns table (grid_lat double precision, grid_lng double precision, avg_mood double precision, entry_count bigint)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    round(lat::numeric, 3)::double precision as grid_lat,
+    round(lng::numeric, 3)::double precision as grid_lng,
+    avg(mood)::double precision as avg_mood,
+    count(*) as entry_count
+  from public.place_moods
+  where lat between min_lat and max_lat
+    and lng between min_lng and max_lng
+  group by grid_lat, grid_lng
+  having count(*) >= 3
+$$;
+
+grant execute on function public.place_mood_aggregates to authenticated;
