@@ -128,6 +128,9 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
       </View>
 
       <InsightsSection entries={entries} placeStats={placeStats} />
+
+      <View style={styles.sectionDivider} />
+
       <AchievementsSection entries={entries} placeStats={placeStats} />
 
       <View style={styles.settingsGroup}>
@@ -238,6 +241,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 32,
     width: '100%',
+  },
+  sectionDivider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: 32,
   },
   statCard: {
     flex: 1,

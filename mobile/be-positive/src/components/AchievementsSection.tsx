@@ -103,7 +103,7 @@ export default function AchievementsSection({ entries, placeStats }: Achievement
 const styles = StyleSheet.create({
   root: {
     width: '100%',
-    marginTop: 28,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 17,
