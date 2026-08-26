@@ -23,3 +23,12 @@ verify_jwt = true
 # by users and App Store reviewers — no auth at all.
 [functions.legal]
 verify_jwt = false
+
+# @react-native-google-signin's free tier can't surface the nonce Google's
+# iOS SDK embeds in the ID token, so Supabase's nonce check on the token
+# always fails ("Passed nonce and nonce in id_token should either both
+# exist or not"). This only affects local `supabase start` — the hosted
+# project needs the matching toggle turned on manually in the Dashboard:
+# Authentication -> Providers -> Google -> "Skip Nonce Check".
+[auth.external.google]
+skip_nonce_check = true
