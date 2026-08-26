@@ -23,6 +23,14 @@ export const MOOD_META: Record<MoodKey, { emoji: string; az: string; en: string 
 
 export const MOOD_ORDER: MoodKey[] = ['terrible', 'bad', 'okay', 'good', 'great']
 
+// Moods are picked from 5 discrete options (index 0-4), but scores are shown
+// to users on a 10-point scale: each mood step is worth 2 points.
+export const MOOD_SCORE_SCALE = 2
+
+export function moodScore(avgIndex: number): number {
+  return (avgIndex + 1) * MOOD_SCORE_SCALE
+}
+
 export interface FactorDef {
   id: string
   emoji: string

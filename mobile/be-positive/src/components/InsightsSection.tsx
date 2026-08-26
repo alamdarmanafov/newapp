@@ -6,10 +6,12 @@ import { useLocale } from '../i18n/LocaleContext'
 import {
   DAY_LABELS,
   MOOD_ORDER,
+  MOOD_SCORE_SCALE,
   PLACE_CATEGORIES,
   TIME_OF_DAY_BUCKETS,
   factorEmoji,
   factorLabel,
+  moodScore,
   placeCategoryLabel,
   timeOfDayBucketForHour,
 } from '../i18n/content'
@@ -142,8 +144,8 @@ export default function InsightsSection({ entries, userId }: InsightsSectionProp
     if (thisMonthEntries.length === 0 || lastMonthEntries.length === 0) return null
 
     const avg = (list: JournalEntry[]) => list.reduce((sum, e) => sum + moodIndex(e), 0) / list.length
-    const current = avg(thisMonthEntries) + 1
-    const previous = avg(lastMonthEntries) + 1
+    const current = moodScore(avg(thisMonthEntries))
+    const previous = moodScore(avg(lastMonthEntries))
     return { current, previous, diff: current - previous }
   }, [entries])
 
@@ -181,7 +183,7 @@ export default function InsightsSection({ entries, userId }: InsightsSectionProp
             </View>
             <Text style={styles.chartLabel}>{t('insights.weekLabel')}</Text>
           </View>
-          <Text style={styles.chartValue}>{weekAverage === null ? '—' : (weekAverage + 1).toFixed(1)}</Text>
+          <Text style={styles.chartValue}>{weekAverage === null ? '—' : moodScore(weekAverage).toFixed(1)}</Text>
         </View>
 
         <Svg viewBox="0 0 260 110" width="100%" height={110} style={{ marginTop: 6 }}>
@@ -225,7 +227,7 @@ export default function InsightsSection({ entries, userId }: InsightsSectionProp
           <Text style={styles.patternText}>
             {t(topFactorInsight.diff >= 0 ? 'insights.patternHigh' : 'insights.patternLow', {
               factor: factorLabel(topFactorInsight.factor, locale),
-              diff: Math.abs(topFactorInsight.diff).toFixed(1),
+              diff: (Math.abs(topFactorInsight.diff) * MOOD_SCORE_SCALE).toFixed(1),
             })}
           </Text>
         </View>

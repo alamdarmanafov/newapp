@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { DAY_LABELS, MONTH_NAMES, MOOD_META, MOOD_ORDER } from '../i18n/content'
+import { DAY_LABELS, MONTH_NAMES, MOOD_META, MOOD_ORDER, moodScore } from '../i18n/content'
 import { colors, MOOD_COLORS, radius } from '../theme'
 
 interface MonthScreenProps {
@@ -129,7 +129,7 @@ export default function MonthScreen({ entries, onSelectEntry, onRefresh }: Month
 
       {monthAverage !== null && (
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>{t('month.summaryTitle', { avg: (monthAverage + 1).toFixed(1) })}</Text>
+          <Text style={styles.summaryTitle}>{t('month.summaryTitle', { avg: moodScore(monthAverage).toFixed(1) })}</Text>
           <Text style={styles.summarySubtitle}>{t('month.summarySubtitle', { logged: loggedCount })}</Text>
         </View>
       )}
