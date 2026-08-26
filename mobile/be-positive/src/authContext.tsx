@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from './supabaseClient'
 import { FUNCTIONS_BASE_URL } from './config'
-import { ENTRIES_KEY } from './storage'
+import { entriesKey } from './storage'
 
 interface AuthContextValue {
   session: Session | null
@@ -38,7 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = async () => {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
-    if (!token) throw new Error('No active session')
+    const userId = data.session?.user.id
+    if (!token || !userId) throw new Error('No active session')
 
     const response = await fetch(`${FUNCTIONS_BASE_URL}/delete-account`, {
       method: 'POST',
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body.error || 'Failed to delete account')
     }
 
-    await AsyncStorage.removeItem(ENTRIES_KEY)
+    await AsyncStorage.removeItem(entriesKey(userId))
     await supabase.auth.signOut()
   }
 

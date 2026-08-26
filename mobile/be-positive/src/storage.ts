@@ -1,35 +1,55 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { JournalEntry } from './types'
 
-export const ENTRIES_KEY = 'be-positive/entries'
+const LEGACY_ENTRIES_KEY = 'be-positive/entries'
 
-export async function loadEntries(): Promise<JournalEntry[]> {
+export function entriesKey(userId: string) {
+  return `be-positive/entries/${userId}`
+}
+
+// One-time migration for entries saved before entries were scoped per
+// account: move them onto the first signed-in user's key, then clear the
+// old shared key so they don't also leak into other accounts on this device.
+async function migrateLegacyEntries(userId: string): Promise<void> {
+  const legacyRaw = await AsyncStorage.getItem(LEGACY_ENTRIES_KEY)
+  if (!legacyRaw) return
+
+  const ownKey = entriesKey(userId)
+  const existing = await AsyncStorage.getItem(ownKey)
+  if (!existing) {
+    await AsyncStorage.setItem(ownKey, legacyRaw)
+  }
+  await AsyncStorage.removeItem(LEGACY_ENTRIES_KEY)
+}
+
+export async function loadEntries(userId: string): Promise<JournalEntry[]> {
   try {
-    const raw = await AsyncStorage.getItem(ENTRIES_KEY)
+    await migrateLegacyEntries(userId)
+    const raw = await AsyncStorage.getItem(entriesKey(userId))
     return raw ? (JSON.parse(raw) as JournalEntry[]) : []
   } catch {
     return []
   }
 }
 
-export async function saveEntry(entry: JournalEntry): Promise<JournalEntry[]> {
-  const entries = await loadEntries()
+export async function saveEntry(entry: JournalEntry, userId: string): Promise<JournalEntry[]> {
+  const entries = await loadEntries(userId)
   const updated = [entry, ...entries]
-  await AsyncStorage.setItem(ENTRIES_KEY, JSON.stringify(updated))
+  await AsyncStorage.setItem(entriesKey(userId), JSON.stringify(updated))
   return updated
 }
 
-export async function updateEntry(updated: JournalEntry): Promise<JournalEntry[]> {
-  const entries = await loadEntries()
+export async function updateEntry(updated: JournalEntry, userId: string): Promise<JournalEntry[]> {
+  const entries = await loadEntries(userId)
   const next = entries.map((entry) => (entry.id === updated.id ? updated : entry))
-  await AsyncStorage.setItem(ENTRIES_KEY, JSON.stringify(next))
+  await AsyncStorage.setItem(entriesKey(userId), JSON.stringify(next))
   return next
 }
 
-export async function deleteEntry(id: string): Promise<JournalEntry[]> {
-  const entries = await loadEntries()
+export async function deleteEntry(id: string, userId: string): Promise<JournalEntry[]> {
+  const entries = await loadEntries(userId)
   const updated = entries.filter((entry) => entry.id !== id)
-  await AsyncStorage.setItem(ENTRIES_KEY, JSON.stringify(updated))
+  await AsyncStorage.setItem(entriesKey(userId), JSON.stringify(updated))
   return updated
 }
 

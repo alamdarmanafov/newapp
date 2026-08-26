@@ -20,7 +20,11 @@ import { colors } from './src/theme'
 
 const ONBOARDING_KEY = 'be-positive/onboarding-seen'
 
-function MainApp() {
+interface MainAppProps {
+  userId: string
+}
+
+function MainApp({ userId }: MainAppProps) {
   const [tab, setTab] = useState<TabKey>('insights')
   const [showToday, setShowToday] = useState(true)
   const [entries, setEntries] = useState<JournalEntry[]>([])
@@ -28,35 +32,44 @@ function MainApp() {
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
 
   useEffect(() => {
-    loadEntries().then((loadedEntries) => {
+    loadEntries(userId).then((loadedEntries) => {
       setEntries(loadedEntries)
       setLoaded(true)
     })
-  }, [])
+  }, [userId])
 
   const streak = useMemo(() => computeStreak(entries), [entries])
 
-  const handleSave = useCallback(async (entry: JournalEntry) => {
-    const updated = await saveEntry(entry)
-    setEntries(updated)
-  }, [])
+  const handleSave = useCallback(
+    async (entry: JournalEntry) => {
+      const updated = await saveEntry(entry, userId)
+      setEntries(updated)
+    },
+    [userId]
+  )
 
-  const handleUpdateEntry = useCallback(async (entry: JournalEntry) => {
-    const updated = await updateEntry(entry)
-    setEntries(updated)
-    setSelectedEntry(null)
-  }, [])
+  const handleUpdateEntry = useCallback(
+    async (entry: JournalEntry) => {
+      const updated = await updateEntry(entry, userId)
+      setEntries(updated)
+      setSelectedEntry(null)
+    },
+    [userId]
+  )
 
-  const handleDeleteEntry = useCallback(async (id: string) => {
-    const updated = await deleteEntry(id)
-    setEntries(updated)
-    setSelectedEntry(null)
-  }, [])
+  const handleDeleteEntry = useCallback(
+    async (id: string) => {
+      const updated = await deleteEntry(id, userId)
+      setEntries(updated)
+      setSelectedEntry(null)
+    },
+    [userId]
+  )
 
   const handleRefreshEntries = useCallback(async () => {
-    const refreshed = await loadEntries()
+    const refreshed = await loadEntries(userId)
     setEntries(refreshed)
-  }, [])
+  }, [userId])
 
   if (showToday) {
     return (
@@ -104,7 +117,7 @@ function Root() {
     )
   }
 
-  return session ? <MainApp /> : <AuthScreen />
+  return session ? <MainApp userId={session.user.id} /> : <AuthScreen />
 }
 
 function AppBody() {
