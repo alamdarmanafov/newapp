@@ -53,6 +53,11 @@ function MainApp() {
     setSelectedEntry(null)
   }, [])
 
+  const handleRefreshEntries = useCallback(async () => {
+    const refreshed = await loadEntries()
+    setEntries(refreshed)
+  }, [])
+
   if (showToday) {
     return (
       <View style={styles.root}>
@@ -68,10 +73,10 @@ function MainApp() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
-          {tab === 'insights' && <InsightsScreen entries={entries} />}
+          {tab === 'insights' && <InsightsScreen entries={entries} onRefresh={handleRefreshEntries} />}
           {tab === 'chat' && <ChatScreen />}
-          {tab === 'month' && <MonthScreen entries={entries} onSelectEntry={setSelectedEntry} />}
-          {tab === 'profile' && <ProfileScreen entries={entries} />}
+          {tab === 'month' && <MonthScreen entries={entries} onSelectEntry={setSelectedEntry} onRefresh={handleRefreshEntries} />}
+          {tab === 'profile' && <ProfileScreen entries={entries} onRefresh={handleRefreshEntries} />}
         </View>
 
         <TabBar tab={tab} onChange={setTab} />

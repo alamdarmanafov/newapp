@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useCallback, useMemo, useState } from 'react'
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
@@ -8,6 +8,7 @@ import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 interface InsightsScreenProps {
   entries: JournalEntry[]
+  onRefresh?: () => Promise<void>
 }
 
 function moodIndex(entry: JournalEntry) {
@@ -20,9 +21,16 @@ function startOfDay(date: Date) {
   return d
 }
 
-export default function InsightsScreen({ entries }: InsightsScreenProps) {
+export default function InsightsScreen({ entries, onRefresh }: InsightsScreenProps) {
   const { t, locale } = useLocale()
   const dayLabels = DAY_LABELS[locale]
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await onRefresh?.()
+    setRefreshing(false)
+  }, [onRefresh])
 
   const week = useMemo(() => {
     const today = startOfDay(new Date())
@@ -98,7 +106,11 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
   const path = validPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
+    >
       <Text style={styles.title}>{t('insights.title')}</Text>
       <Text style={styles.subtitle}>{t('insights.subtitle')}</Text>
 

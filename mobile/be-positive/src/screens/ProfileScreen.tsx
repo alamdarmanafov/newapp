@@ -1,33 +1,43 @@
-import { useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
+import { useCallback, useEffect, useState } from 'react'
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import Constants from 'expo-constants'
 import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
 import { LOCALE_OPTIONS } from '../i18n/content'
 import LanguagePickerModal from '../components/LanguagePickerModal'
+import PasswordModal from '../components/PasswordModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { colors, radius, shadow } from '../theme'
 import type { JournalEntry } from '../types'
 
 interface ProfileScreenProps {
   entries: JournalEntry[]
+  onRefresh?: () => Promise<void>
 }
 
 const appVersion = Constants.expoConfig?.version ?? '1.0.0'
 
-export default function ProfileScreen({ entries }: ProfileScreenProps) {
+export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps) {
   const { session, signOut, deleteAccount } = useAuth()
   const { t, locale } = useLocale()
   const userId = session?.user.id
   const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
   const [remindersOn, setRemindersOn] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
 
   useEffect(() => {
     if (userId) areNotificationsEnabled(userId).then(setRemindersOn)
   }, [userId])
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await Promise.all([onRefresh?.(), userId ? areNotificationsEnabled(userId).then(setRemindersOn) : Promise.resolve()])
+    setRefreshing(false)
+  }, [onRefresh, userId])
 
   useEffect(() => {
     if (userId && remindersOn) updatePushTokenLanguage(userId, locale)
@@ -76,7 +86,11 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={styles.container}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
+    >
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{(name || session?.user.email || '?').charAt(0).toUpperCase()}</Text>
       </View>
@@ -94,26 +108,36 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
         </View>
       </View>
 
-      <View style={styles.settingRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.settingLabel}>{t('profile.remindersLabel')}</Text>
-          <Text style={styles.settingHint}>{t('profile.remindersHint')}</Text>
+      <View style={styles.settingsGroup}>
+        <View style={styles.settingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('profile.remindersLabel')}</Text>
+            <Text style={styles.settingHint}>{t('profile.remindersHint')}</Text>
+          </View>
+          <Switch
+            value={remindersOn}
+            onValueChange={toggleReminders}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor="#ffffff"
+          />
         </View>
-        <Switch
-          value={remindersOn}
-          onValueChange={toggleReminders}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor="#ffffff"
-        />
-      </View>
 
-      <Pressable style={styles.settingRow} onPress={() => setLanguagePickerOpen(true)}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.settingLabel}>{t('profile.language')}</Text>
-        </View>
-        <Text style={styles.languageValue}>{currentLanguageName}</Text>
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
+        <Pressable style={styles.settingRow} onPress={() => setLanguagePickerOpen(true)}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('profile.language')}</Text>
+          </View>
+          <Text style={styles.languageValue}>{currentLanguageName}</Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+
+        <Pressable style={styles.settingRow} onPress={() => setPasswordModalOpen(true)}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('profile.password')}</Text>
+            <Text style={styles.settingHint}>{t('profile.passwordHint')}</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+      </View>
 
       <Pressable style={styles.signOutButton} onPress={signOut}>
         <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
@@ -132,16 +156,21 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
       </Text>
 
       <LanguagePickerModal visible={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
-    </View>
+      <PasswordModal visible={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
+    </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     alignItems: 'center',
     padding: 28,
     paddingTop: 48,
+    paddingBottom: 40,
   },
   avatar: {
     width: 108,
@@ -199,10 +228,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontWeight: '600',
   },
+  settingsGroup: {
+    width: '100%',
+    marginTop: 28,
+    gap: 14,
+  },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 24,
     width: '100%',
     padding: 20,
     borderRadius: radius.xl,
@@ -231,7 +264,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   signOutButton: {
-    marginTop: 'auto',
+    marginTop: 40,
     paddingVertical: 16,
     paddingHorizontal: 40,
     borderRadius: radius.lg,

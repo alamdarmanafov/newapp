@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useCallback, useMemo, useState } from 'react'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
 import { DAY_LABELS, MONTH_NAMES, MOOD_META, MOOD_ORDER } from '../i18n/content'
@@ -8,6 +8,7 @@ import { colors, MOOD_COLORS, radius } from '../theme'
 interface MonthScreenProps {
   entries: JournalEntry[]
   onSelectEntry: (entry: JournalEntry) => void
+  onRefresh?: () => Promise<void>
 }
 
 interface Cell {
@@ -24,10 +25,17 @@ function moodIndex(entry: JournalEntry) {
   return MOOD_ORDER.indexOf(entry.mood)
 }
 
-export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps) {
+export default function MonthScreen({ entries, onSelectEntry, onRefresh }: MonthScreenProps) {
   const { t, locale } = useLocale()
   const dayLabels = DAY_LABELS[locale]
   const monthNames = MONTH_NAMES[locale]
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await onRefresh?.()
+    setRefreshing(false)
+  }, [onRefresh])
 
   const now = new Date()
   const year = now.getFullYear()
@@ -67,7 +75,11 @@ export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps
   }, [entries, year, month])
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
+    >
       <Text style={styles.title}>
         {monthNames[month]} {year}
       </Text>

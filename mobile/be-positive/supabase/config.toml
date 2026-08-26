@@ -1,0 +1,20 @@
+project_id = "ktnhctzzgzbqhqtdijze"
+
+# These functions are called from the app with the publishable anon key
+# (not a legacy JWT), so gateway JWT verification must stay off. Keeping
+# this declared here means every future `supabase functions deploy` picks
+# it up automatically, instead of depending on remembering the
+# --no-verify-jwt flag by hand.
+[functions.chat]
+verify_jwt = false
+
+[functions.coach]
+verify_jwt = false
+
+[functions.daily-notification]
+verify_jwt = false
+
+# This one identifies the caller from their real session token, so the
+# gateway's normal JWT check should stay on.
+[functions.delete-account]
+verify_jwt = true

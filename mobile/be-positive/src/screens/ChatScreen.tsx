@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -32,6 +33,7 @@ export default function ChatScreen() {
   const [reply, setReply] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   const loadUsage = useCallback(async () => {
     if (!userId) return
@@ -87,6 +89,12 @@ export default function ChatScreen() {
     }
   }
 
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await loadUsage()
+    setRefreshing(false)
+  }
+
   const limitReached = remaining !== null && remaining <= 0
   const canType = remaining !== null && remaining > 0 && !loading
 
@@ -118,6 +126,7 @@ export default function ChatScreen() {
         style={styles.conversation}
         contentContainerStyle={styles.conversationContent}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
         {!sentMessage && !loading && (
           <View style={styles.emptyState}>

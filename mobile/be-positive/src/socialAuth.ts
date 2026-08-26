@@ -55,6 +55,12 @@ export async function signInWithApple(): Promise<string | null> {
   }
 }
 
+export async function signInWithPassword(email: string, password: string): Promise<string | null> {
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+  if (error) return error.message
+  return null
+}
+
 export async function signInWithGoogle(): Promise<string | null> {
   ensureGoogleConfigured()
   try {
