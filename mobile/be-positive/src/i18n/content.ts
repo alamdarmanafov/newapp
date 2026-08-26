@@ -114,7 +114,7 @@ export interface AchievementDef {
   emoji: string
   az: string
   en: string
-  metric: 'entries' | 'streak' | 'places' | 'factors'
+  metric: 'entries' | 'streak' | 'places' | 'factors' | 'goodDays'
   threshold: number
 }
 
@@ -128,6 +128,10 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: 'streak_30', emoji: '⚡', az: '30 günlük seriya', en: '30-day streak', metric: 'streak', threshold: 30 },
   { id: 'explorer', emoji: '🗺️', az: 'Kəşfiyyatçı', en: 'Explorer', metric: 'places', threshold: 1 },
   { id: 'variety', emoji: '🎯', az: 'Rəngarənglik', en: 'Variety', metric: 'factors', threshold: 5 },
+  { id: 'positive_30', emoji: '🌤️', az: 'Pozitiv 30 gün', en: '30 positive days', metric: 'goodDays', threshold: 30 },
+  { id: 'positive_90', emoji: '☀️', az: 'Pozitiv 90 gün', en: '90 positive days', metric: 'goodDays', threshold: 90 },
+  { id: 'positive_180', emoji: '🌟', az: 'Pozitiv 180 gün', en: '180 positive days', metric: 'goodDays', threshold: 180 },
+  { id: 'positive_365', emoji: '🏆', az: 'Pozitiv 365 gün', en: '365 positive days', metric: 'goodDays', threshold: 365 },
 ]
 
 export function achievementLabel(id: string, locale: Locale): string {

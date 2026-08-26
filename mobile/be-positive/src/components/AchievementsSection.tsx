@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { ACHIEVEMENT_DEFS, type AchievementDef } from '../i18n/content'
+import { ACHIEVEMENT_DEFS, MOOD_ORDER, type AchievementDef } from '../i18n/content'
 import type { MyPlaceCategoryStat } from '../places'
-import { computeStreak } from '../storage'
+import { computeStreak, dayKey } from '../storage'
 import { colors, radius, shadow } from '../theme'
 import type { TranslationKey } from '../i18n/translations'
 
@@ -18,6 +18,11 @@ const METRIC_KEY: Record<AchievementDef['metric'], TranslationKey> = {
   streak: 'achievements.metricStreak',
   places: 'achievements.metricPlaces',
   factors: 'achievements.metricFactors',
+  goodDays: 'achievements.metricGoodDays',
+}
+
+function moodIndex(entry: JournalEntry) {
+  return MOOD_ORDER.indexOf(entry.mood)
 }
 
 export default function AchievementsSection({ entries, placeStats }: AchievementsSectionProps) {
@@ -27,7 +32,10 @@ export default function AchievementsSection({ entries, placeStats }: Achievement
     const streak = computeStreak(entries)
     const places = placeStats.reduce((sum, s) => sum + s.count, 0)
     const factors = new Set(entries.flatMap((e) => e.factors ?? [])).size
-    return { entries: entries.length, streak, places, factors }
+    const goodDays = new Set(
+      entries.filter((e) => moodIndex(e) >= 3).map((e) => dayKey(e.createdAt))
+    ).size
+    return { entries: entries.length, streak, places, factors, goodDays }
   }, [entries, placeStats])
 
   const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => values[a.metric] >= a.threshold).length
