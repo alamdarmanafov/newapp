@@ -5,10 +5,12 @@ import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
 import { FUNCTIONS_BASE_URL } from '../config'
 import { LOCALE_OPTIONS } from '../i18n/content'
+import AchievementsSection from '../components/AchievementsSection'
 import InsightsSection from '../components/InsightsSection'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
+import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
 import { cancelWeeklyRecap, scheduleWeeklyRecap } from '../weeklyRecap'
 import { colors, radius, shadow } from '../theme'
 import type { JournalEntry } from '../types'
@@ -30,15 +32,24 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
 
   useEffect(() => {
     if (userId) areNotificationsEnabled(userId).then(setRemindersOn)
   }, [userId])
 
+  useEffect(() => {
+    if (userId) fetchMyPlaceCategoryStats(userId).then(setPlaceStats)
+  }, [userId])
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
-    await Promise.all([onRefresh?.(), userId ? areNotificationsEnabled(userId).then(setRemindersOn) : Promise.resolve()])
+    await Promise.all([
+      onRefresh?.(),
+      userId ? areNotificationsEnabled(userId).then(setRemindersOn) : Promise.resolve(),
+      userId ? fetchMyPlaceCategoryStats(userId).then(setPlaceStats) : Promise.resolve(),
+    ])
     setRefreshing(false)
   }, [onRefresh, userId])
 
@@ -116,7 +127,8 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         </View>
       </View>
 
-      <InsightsSection entries={entries} userId={userId} />
+      <InsightsSection entries={entries} placeStats={placeStats} />
+      <AchievementsSection entries={entries} placeStats={placeStats} />
 
       <View style={styles.settingsGroup}>
         <View style={styles.settingRow}>

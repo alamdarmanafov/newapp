@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
 import type { JournalEntry } from '../types'
@@ -15,12 +15,12 @@ import {
   placeCategoryLabel,
   timeOfDayBucketForHour,
 } from '../i18n/content'
-import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
+import type { MyPlaceCategoryStat } from '../places'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 interface InsightsSectionProps {
   entries: JournalEntry[]
-  userId?: string
+  placeStats: MyPlaceCategoryStat[]
 }
 
 function moodIndex(entry: JournalEntry) {
@@ -33,14 +33,9 @@ function startOfDay(date: Date) {
   return d
 }
 
-export default function InsightsSection({ entries, userId }: InsightsSectionProps) {
+export default function InsightsSection({ entries, placeStats }: InsightsSectionProps) {
   const { t, locale } = useLocale()
   const dayLabels = DAY_LABELS[locale]
-  const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
-
-  useEffect(() => {
-    if (userId) fetchMyPlaceCategoryStats(userId).then(setPlaceStats)
-  }, [userId])
 
   const week = useMemo(() => {
     const today = startOfDay(new Date())

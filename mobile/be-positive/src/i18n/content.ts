@@ -109,6 +109,31 @@ export function factorEmoji(id: string): string {
   return FACTOR_DEFS.find((f) => f.id === id)?.emoji ?? ''
 }
 
+export interface AchievementDef {
+  id: string
+  emoji: string
+  az: string
+  en: string
+  metric: 'entries' | 'streak' | 'places' | 'factors'
+  threshold: number
+}
+
+// Ordered lightest-to-hardest within each metric group so the UI can show
+// unlocked ones first without extra sorting logic.
+export const ACHIEVEMENT_DEFS: AchievementDef[] = [
+  { id: 'first_step', emoji: '🌱', az: 'İlk addım', en: 'First step', metric: 'entries', threshold: 1 },
+  { id: 'entries_30', emoji: '📓', az: '30 qeyd', en: '30 entries', metric: 'entries', threshold: 30 },
+  { id: 'entries_100', emoji: '📚', az: '100 qeyd', en: '100 entries', metric: 'entries', threshold: 100 },
+  { id: 'streak_7', emoji: '🔥', az: '7 günlük seriya', en: '7-day streak', metric: 'streak', threshold: 7 },
+  { id: 'streak_30', emoji: '⚡', az: '30 günlük seriya', en: '30-day streak', metric: 'streak', threshold: 30 },
+  { id: 'explorer', emoji: '🗺️', az: 'Kəşfiyyatçı', en: 'Explorer', metric: 'places', threshold: 1 },
+  { id: 'variety', emoji: '🎯', az: 'Rəngarənglik', en: 'Variety', metric: 'factors', threshold: 5 },
+]
+
+export function achievementLabel(id: string, locale: Locale): string {
+  return ACHIEVEMENT_DEFS.find((a) => a.id === id)?.[locale] ?? id
+}
+
 export const DAY_LABELS: Record<Locale, string[]> = {
   az: ['B.e', 'Ç.a', 'Ç', 'C.a', 'C', 'Ş', 'B'],
   en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
