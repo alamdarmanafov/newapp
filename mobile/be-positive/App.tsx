@@ -57,7 +57,7 @@ function MainApp() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
-          {tab === 'today' && <TodayScreen onSave={handleSave} streak={streak} />}
+          {tab === 'today' && <TodayScreen entries={entries} onSave={handleSave} streak={streak} />}
           {tab === 'insights' && <InsightsScreen entries={entries} />}
           {tab === 'chat' && <ChatScreen />}
           {tab === 'month' && <MonthScreen entries={entries} onSelectEntry={setSelectedEntry} />}

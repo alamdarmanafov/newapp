@@ -33,7 +33,7 @@ export async function deleteEntry(id: string): Promise<JournalEntry[]> {
   return updated
 }
 
-function dayKey(iso: string) {
+export function dayKey(iso: string) {
   return iso.slice(0, 10)
 }
 
