@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { View } from 'react-native'
 import CheckInScreen from './CheckInScreen'
 import FactorsScreen from './FactorsScreen'
@@ -33,6 +33,18 @@ export default function TodayScreen({ entries, onSave, streak, onDone }: TodaySc
 
   const todayKey = dayKey(new Date().toISOString())
   const loggedToday = entries.find((entry) => dayKey(entry.createdAt) === todayKey)
+
+  const pastEntry = useMemo(() => {
+    const now = new Date()
+    let best: JournalEntry | null = null
+    for (const entry of entries) {
+      const d = new Date(entry.createdAt)
+      if (d.getMonth() === now.getMonth() && d.getDate() === now.getDate() && d.getFullYear() !== now.getFullYear()) {
+        if (!best || d.getFullYear() > new Date(best.createdAt).getFullYear()) best = entry
+      }
+    }
+    return best
+  }, [entries])
 
   const toggleFactor = (label: string) => {
     setFactors((current) =>
@@ -80,7 +92,7 @@ export default function TodayScreen({ entries, onSave, streak, onDone }: TodaySc
   // of letting the mood picker open again. Resets automatically once the
   // date changes.
   if (step === 'checkin' && loggedToday) {
-    return <TodayLoggedScreen entry={loggedToday} streak={streak} onContinue={onDone} />
+    return <TodayLoggedScreen entry={loggedToday} streak={streak} pastEntry={pastEntry} onContinue={onDone} />
   }
 
   return (

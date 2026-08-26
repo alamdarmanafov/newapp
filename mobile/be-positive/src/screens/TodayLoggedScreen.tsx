@@ -7,12 +7,15 @@ import { colors, radius, shadow } from '../theme'
 interface TodayLoggedScreenProps {
   entry: JournalEntry
   streak: number
+  pastEntry?: JournalEntry | null
   onContinue: () => void
 }
 
-export default function TodayLoggedScreen({ entry, streak, onContinue }: TodayLoggedScreenProps) {
+export default function TodayLoggedScreen({ entry, streak, pastEntry, onContinue }: TodayLoggedScreenProps) {
   const { t } = useLocale()
   const mood = MOOD_META[entry.mood]
+  const pastMood = pastEntry ? MOOD_META[pastEntry.mood] : null
+  const yearsAgo = pastEntry ? new Date().getFullYear() - new Date(pastEntry.createdAt).getFullYear() : 0
 
   return (
     <View style={styles.root}>
@@ -44,6 +47,22 @@ export default function TodayLoggedScreen({ entry, streak, onContinue }: TodayLo
               </Text>
               <Text style={styles.streakLabel}>{t('saved.streakLabel')}</Text>
             </View>
+          </View>
+        )}
+
+        {pastEntry && pastMood && (
+          <View style={styles.onThisDayCard}>
+            <View style={styles.onThisDayHeader}>
+              <Text style={styles.onThisDayEmoji}>{pastMood.emoji}</Text>
+              <Text style={styles.onThisDayLabel}>
+                {yearsAgo === 1 ? t('todayLogged.onThisDayOne') : t('todayLogged.onThisDayMany', { years: yearsAgo })}
+              </Text>
+            </View>
+            {(pastEntry.gratitude || pastEntry.note) && (
+              <Text style={styles.onThisDayText} numberOfLines={3}>
+                {pastEntry.gratitude || pastEntry.note}
+              </Text>
+            )}
           </View>
         )}
       </View>
@@ -153,6 +172,34 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12.5,
     color: colors.muted,
+  },
+  onThisDayCard: {
+    marginTop: 16,
+    width: '100%',
+    padding: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  onThisDayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  onThisDayEmoji: {
+    fontSize: 18,
+  },
+  onThisDayLabel: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: colors.muted,
+  },
+  onThisDayText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
   },
   footer: {
     padding: 24,
