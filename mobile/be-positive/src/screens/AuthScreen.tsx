@@ -1,168 +1,77 @@
-import { useState } from 'react'
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
-import { useAuth } from '../authContext'
+import { useEffect, useState } from 'react'
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native'
+import * as AppleAuthentication from 'expo-apple-authentication'
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin'
 import { useLocale } from '../i18n/LocaleContext'
 import LanguageSwitcher from '../components/LanguageSwitcher'
-import { colors, radius, shadow } from '../theme'
+import { isAppleSignInAvailable, signInWithApple, signInWithGoogle } from '../socialAuth'
+import { colors } from '../theme'
 
 export default function AuthScreen() {
-  const { signIn, signUp, resetPassword } = useAuth()
   const { t } = useLocale()
-  const [mode, setMode] = useState<'signIn' | 'signUp' | 'forgot'>('signIn')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [appleAvailable, setAppleAvailable] = useState(false)
+  const [loading, setLoading] = useState<'apple' | 'google' | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
 
-  const handleSubmit = async () => {
+  useEffect(() => {
+    if (Platform.OS === 'ios') isAppleSignInAvailable().then(setAppleAvailable)
+  }, [])
+
+  const handleApple = async () => {
     setError(null)
-    setInfo(null)
+    setLoading('apple')
+    const message = await signInWithApple()
+    setLoading(null)
+    if (message) setError(message)
+  }
 
-    if (mode === 'forgot') {
-      if (!email.trim()) {
-        setError(t('auth.errorEmailOnly'))
-        return
-      }
-      setLoading(true)
-      const message = await resetPassword(email.trim())
-      setLoading(false)
-      if (message) {
-        setError(message)
-        return
-      }
-      setInfo(t('auth.infoResetSent'))
-      return
-    }
-
-    if (!email.trim() || !password) {
-      setError(t('auth.errorFillFields'))
-      return
-    }
-    setLoading(true)
-
-    if (mode === 'signIn') {
-      const message = await signIn(email.trim(), password)
-      setLoading(false)
-      if (message) setError(message)
-      return
-    }
-
-    const result = await signUp(email.trim(), password, name)
-    setLoading(false)
-    if (result.error) {
-      setError(result.error)
-      return
-    }
-    if (result.needsConfirmation) {
-      setInfo(t('auth.infoConfirmEmail'))
-      // Some Supabase projects still report needsConfirmation right after
-      // signUp even though the account is already usable (e.g. email
-      // confirmation was just disabled and hasn't fully propagated). Retry
-      // signing in automatically once so the user isn't stuck on this screen.
-      setTimeout(() => {
-        signIn(email.trim(), password)
-      }, 5000)
-    }
-    // Otherwise a session was created immediately and Root() will switch to MainApp.
+  const handleGoogle = async () => {
+    setError(null)
+    setLoading('google')
+    const message = await signInWithGoogle()
+    setLoading(null)
+    if (message) setError(message)
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.languageRow}>
-          <LanguageSwitcher />
-        </View>
+    <View style={styles.root}>
+      <View style={styles.languageRow}>
+        <LanguageSwitcher />
+      </View>
 
+      <View style={styles.center}>
         <Text style={styles.title}>{t('auth.title')}</Text>
-        <Text style={styles.subtitle}>
-          {mode === 'signIn' ? t('auth.subtitleSignIn') : mode === 'signUp' ? t('auth.subtitleSignUp') : t('auth.subtitleForgot')}
-        </Text>
-
-        {mode === 'signUp' && (
-          <TextInput
-            style={styles.input}
-            placeholder={t('auth.namePlaceholder')}
-            placeholderTextColor={colors.muted}
-            value={name}
-            onChangeText={setName}
-          />
-        )}
-
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.emailPlaceholder')}
-          placeholderTextColor={colors.muted}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        {mode !== 'forgot' && (
-          <TextInput
-            style={styles.input}
-            placeholder={t('auth.passwordPlaceholder')}
-            placeholderTextColor={colors.muted}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        )}
+        <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
         {error && <Text style={styles.error}>{error}</Text>}
-        {info && <Text style={styles.info}>{info}</Text>}
 
-        <Pressable style={styles.primaryButton} onPress={handleSubmit} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.primaryButtonText}>
-              {mode === 'signIn' ? t('auth.signInButton') : mode === 'signUp' ? t('auth.signUpButton') : t('auth.forgotButton')}
-            </Text>
+        <View style={styles.buttons}>
+          {appleAvailable && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={12}
+              style={styles.appleButton}
+              onPress={handleApple}
+            />
           )}
-        </Pressable>
 
-        {mode === 'signIn' && (
-          <Pressable
-            onPress={() => {
-              setMode('forgot')
-              setError(null)
-              setInfo(null)
-            }}
-            style={styles.forgotLink}
-          >
-            <Text style={styles.forgotText}>{t('auth.forgotLink')}</Text>
-          </Pressable>
-        )}
+          <GoogleSigninButton
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Light}
+            style={styles.googleButton}
+            onPress={handleGoogle}
+            disabled={loading !== null}
+          />
 
-        <Pressable
-          onPress={() => {
-            setMode(mode === 'signUp' ? 'signIn' : mode === 'forgot' ? 'signIn' : 'signUp')
-            setError(null)
-            setInfo(null)
-          }}
-          style={styles.switchLink}
-        >
-          <Text style={styles.switchText}>
-            {mode === 'signIn' ? t('auth.switchToSignUp') : mode === 'signUp' ? t('auth.switchToSignIn') : t('auth.backToSignIn')}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {loading && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          )}
+        </View>
+      </View>
+    </View>
   )
 }
 
@@ -171,15 +80,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 28,
-  },
   languageRow: {
     position: 'absolute',
     top: 60,
     right: 24,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
   },
   title: {
     fontSize: 30,
@@ -192,57 +102,29 @@ const styles = StyleSheet.create({
     color: colors.muted,
     textAlign: 'center',
     marginTop: 6,
-    marginBottom: 32,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 14,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    marginBottom: 12,
+    marginBottom: 40,
   },
   error: {
     color: colors.danger,
     fontSize: 13,
-    marginBottom: 8,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  info: {
-    color: colors.primary,
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  primaryButton: {
-    marginTop: 8,
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 15,
+  buttons: {
+    width: '100%',
+    maxWidth: 320,
     alignItems: 'center',
-    ...shadow.soft,
+    gap: 14,
   },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 15,
+  appleButton: {
+    width: '100%',
+    height: 50,
   },
-  forgotLink: {
-    marginTop: 14,
-    alignItems: 'center',
+  googleButton: {
+    width: '100%',
+    height: 50,
   },
-  forgotText: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  switchLink: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  switchText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
+  loadingRow: {
+    marginTop: 4,
   },
 })

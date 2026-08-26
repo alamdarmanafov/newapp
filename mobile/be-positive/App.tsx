@@ -10,7 +10,6 @@ import MonthScreen from './src/screens/MonthScreen'
 import ChatScreen from './src/screens/ChatScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
 import AuthScreen from './src/screens/AuthScreen'
-import ResetPasswordScreen from './src/screens/ResetPasswordScreen'
 import OnboardingScreen from './src/screens/OnboardingScreen'
 import EntryDetailScreen from './src/screens/EntryDetailScreen'
 import { AuthProvider, useAuth } from './src/authContext'
@@ -79,7 +78,7 @@ function MainApp() {
 }
 
 function Root() {
-  const { session, loading, recovering } = useAuth()
+  const { session, loading } = useAuth()
 
   if (loading) {
     return (
@@ -88,8 +87,6 @@ function Root() {
       </View>
     )
   }
-
-  if (recovering) return <ResetPasswordScreen />
 
   return session ? <MainApp /> : <AuthScreen />
 }

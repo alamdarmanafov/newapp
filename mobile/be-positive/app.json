@@ -8,7 +8,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bepositive.app"
+      "bundleIdentifier": "com.bepositive.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.bepositive.app",
@@ -29,6 +30,13 @@
         "expo-notifications",
         {
           "color": "#2F8FE0"
+        }
+      ],
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_ME"
         }
       ]
     ],

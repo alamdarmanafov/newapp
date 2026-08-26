@@ -8,3 +8,11 @@ export const SUPABASE_ANON_KEY =
 export const FUNCTIONS_BASE_URL = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1`
 
 export const DAILY_CHAT_MESSAGE_LIMIT = 3
+
+// Google OAuth client IDs (from Google Cloud Console -> APIs & Services ->
+// Credentials). These are public identifiers, not secrets. TODO: replace the
+// placeholders once the credentials exist.
+export const GOOGLE_IOS_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? 'REPLACE_WITH_GOOGLE_IOS_CLIENT_ID'
+export const GOOGLE_WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? 'REPLACE_WITH_GOOGLE_WEB_CLIENT_ID'
