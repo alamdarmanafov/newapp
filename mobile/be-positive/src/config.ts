@@ -16,4 +16,5 @@ export const GOOGLE_IOS_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ??
   '360468046824-1dp6cc53joq20l1tsh47fabk56eujb3t.apps.googleusercontent.com'
 export const GOOGLE_WEB_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? 'REPLACE_WITH_GOOGLE_WEB_CLIENT_ID'
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ??
+  '360468046824-fd6kf3pvdkpqecig4fgrakbgurl9rhan.apps.googleusercontent.com'
