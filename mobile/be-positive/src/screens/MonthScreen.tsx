@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { MOOD_OPTIONS, type JournalEntry } from '../types'
+import type { JournalEntry } from '../types'
+import { useLocale } from '../i18n/LocaleContext'
+import { DAY_LABELS, MONTH_NAMES, MOOD_ORDER } from '../i18n/content'
 import { colors, MOOD_COLORS, radius } from '../theme'
 
 interface MonthScreenProps {
@@ -8,21 +10,19 @@ interface MonthScreenProps {
   onSelectEntry: (entry: JournalEntry) => void
 }
 
-const MONTH_NAMES = [
-  'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'İyun',
-  'İyul', 'Avqust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr',
-]
-const DAY_LABELS = ['B.e', 'Ç.a', 'Ç', 'C.a', 'C', 'Ş', 'B']
-
 function dayKey(iso: string) {
   return iso.slice(0, 10)
 }
 
 function moodIndex(entry: JournalEntry) {
-  return MOOD_OPTIONS.findIndex((option) => option.key === entry.mood)
+  return MOOD_ORDER.indexOf(entry.mood)
 }
 
 export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps) {
+  const { t, locale } = useLocale()
+  const dayLabels = DAY_LABELS[locale]
+  const monthNames = MONTH_NAMES[locale]
+
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
@@ -61,13 +61,11 @@ export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{MONTH_NAMES[month]}</Text>
-      <Text style={styles.subtitle}>
-        {daysInMonth} gündən {loggedCount}-ni qeyd etdin
-      </Text>
+      <Text style={styles.title}>{monthNames[month]}</Text>
+      <Text style={styles.subtitle}>{t('month.subtitle', { total: daysInMonth, logged: loggedCount })}</Text>
 
       <View style={styles.grid}>
-        {DAY_LABELS.map((d) => (
+        {dayLabels.map((d) => (
           <Text key={d} style={styles.dayHeader}>
             {d}
           </Text>
@@ -88,23 +86,23 @@ export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps
       </View>
 
       <View style={styles.legendRow}>
-        <Text style={styles.legendText}>Çətin</Text>
+        <Text style={styles.legendText}>{t('month.legendLow')}</Text>
         <View style={styles.legendBar}>
           {MOOD_COLORS.map((c) => (
             <View key={c} style={[styles.legendChip, { backgroundColor: c }]} />
           ))}
         </View>
-        <Text style={styles.legendText}>Əla</Text>
+        <Text style={styles.legendText}>{t('month.legendHigh')}</Text>
       </View>
 
       {monthAverage !== null && (
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Bu ayın orta əhvalı {(monthAverage + 1).toFixed(1)} / 5</Text>
-          <Text style={styles.summarySubtitle}>{loggedCount} gündə qeyd etmisən</Text>
+          <Text style={styles.summaryTitle}>{t('month.summaryTitle', { avg: (monthAverage + 1).toFixed(1) })}</Text>
+          <Text style={styles.summarySubtitle}>{t('month.summarySubtitle', { logged: loggedCount })}</Text>
         </View>
       )}
 
-      {entries.length === 0 && <Text style={styles.empty}>Hələ heç bir qeydin yoxdur.</Text>}
+      {entries.length === 0 && <Text style={styles.empty}>{t('month.empty')}</Text>}
     </ScrollView>
   )
 }

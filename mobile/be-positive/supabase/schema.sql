@@ -30,8 +30,15 @@ create policy "Users can update their own usage"
 create table if not exists public.push_tokens (
   user_id uuid primary key references auth.users (id) on delete cascade,
   token text not null,
+  name text,
+  language text not null default 'az',
   updated_at timestamptz not null default now()
 );
+
+-- If push_tokens already existed from an earlier version of this schema,
+-- run this to add the new columns:
+-- alter table public.push_tokens add column if not exists name text;
+-- alter table public.push_tokens add column if not exists language text not null default 'az';
 
 alter table public.push_tokens enable row level security;
 

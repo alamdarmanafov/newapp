@@ -1,30 +1,57 @@
 import { corsHeaders, generateGeminiReply } from '../_shared/gemini.ts'
 
-const MORNING_INSTRUCTION =
-  'Sən "Be Positive" adlı əhval-ruhiyyə gündəliyi tətbiqi üçün push bildiriş mətnləri yazan yaradıcı ' +
-  'köməkçisən. Səhər üçün QISA (maksimum 80 simvol), maraqlı, motivasiyaedici, Azərbaycan dilində BİR ' +
-  'cümlə yaz ki, istifadəçini tətbiqi açıb bu günkü əhvalını qeyd etməyə həvəsləndirsin. Hər dəfə fərqli ' +
-  'üslub istifadə et: bəzən sual ver, bəzən kiçik bir müdriklik paylaş, bəzən sadəcə isti salam. Dırnaq ' +
-  'işarəsi, emoji izahı yazma, sadəcə mətnin özünü qaytar (1-2 uyğun emoji əlavə edə bilərsən).'
+const INSTRUCTIONS: Record<string, Record<'morning' | 'evening', string>> = {
+  az: {
+    morning:
+      'Sən "Be Positive" adlı əhval-ruhiyyə gündəliyi tətbiqi üçün push bildiriş mətnləri yazan yaradıcı ' +
+      'köməkçisən. Səhər üçün QISA (maksimum 70 simvol), maraqlı, motivasiyaedici, Azərbaycan dilində BİR ' +
+      'cümlə yaz ki, istifadəçini tətbiqi açıb bu günkü əhvalını qeyd etməyə həvəsləndirsin. Hər dəfə fərqli ' +
+      'üslub istifadə et: bəzən sual ver, bəzən kiçik bir müdriklik paylaş, bəzən sadəcə isti salam. Dırnaq ' +
+      'işarəsi yazma, sadəcə mətnin özünü qaytar (1 uyğun emoji əlavə edə bilərsən). İstifadəçinin adını YAZMA, ' +
+      'ad ayrıca əlavə ediləcək.',
+    evening:
+      'Sən "Be Positive" adlı əhval-ruhiyyə gündəliyi tətbiqi üçün push bildiriş mətnləri yazan yaradıcı ' +
+      'köməkçisən. Axşam üçün QISA (maksimum 70 simvol), isti, düşündürücü, Azərbaycan dilində BİR cümlə ' +
+      'yaz ki, istifadəçini günü necə keçdiyini düşünüb qeyd etməyə həvəsləndirsin. Hər dəfə fərqli üslub ' +
+      'istifadə et: bəzən sual ver, bəzən minnətdarlığı xatırlat, bəzən sadəcə mehriban bir cümlə. Dırnaq ' +
+      'işarəsi yazma, sadəcə mətnin özünü qaytar (1 uyğun emoji əlavə edə bilərsən). İstifadəçinin adını YAZMA, ' +
+      'ad ayrıca əlavə ediləcək.',
+  },
+  en: {
+    morning:
+      'You are a creative assistant writing push notification copy for "Be Positive", a mood-journaling app. ' +
+      'Write ONE SHORT (max 70 characters), interesting, motivating sentence in English for a morning reminder ' +
+      "that encourages the user to open the app and log today's mood. Vary the style each time: sometimes ask " +
+      'a question, sometimes share a small piece of wisdom, sometimes just a warm greeting. No quotation marks, ' +
+      'return only the text itself (you may add 1 fitting emoji). Do NOT include the user\'s name, it will be ' +
+      'added separately.',
+    evening:
+      'You are a creative assistant writing push notification copy for "Be Positive", a mood-journaling app. ' +
+      'Write ONE SHORT (max 70 characters), warm, reflective sentence in English for an evening reminder that ' +
+      'encourages the user to reflect on their day and log it. Vary the style each time: sometimes ask a ' +
+      'question, sometimes reference gratitude, sometimes just a kind sentence. No quotation marks, return only ' +
+      "the text itself (you may add 1 fitting emoji). Do NOT include the user's name, it will be added separately.",
+  },
+}
 
-const EVENING_INSTRUCTION =
-  'Sən "Be Positive" adlı əhval-ruhiyyə gündəliyi tətbiqi üçün push bildiriş mətnləri yazan yaradıcı ' +
-  'köməkçisən. Axşam üçün QISA (maksimum 80 simvol), isti, düşündürücü, Azərbaycan dilində BİR cümlə ' +
-  'yaz ki, istifadəçini günü necə keçdiyini düşünüb qeyd etməyə həvəsləndirsin. Hər dəfə fərqli üslub ' +
-  'istifadə et: bəzən sual ver, bəzən minnətdarlığı xatırlat, bəzən sadəcə mehriban bir cümlə. Dırnaq ' +
-  'işarəsi, emoji izahı yazma, sadəcə mətnin özünü qaytar (1-2 uyğun emoji əlavə edə bilərsən).'
+const FALLBACK: Record<string, Record<'morning' | 'evening', string>> = {
+  az: { morning: 'Bugünkü əhvalını qeyd et 🌤️', evening: 'Günü necə keçirdin? Əhvalını qeyd et 🌙' },
+  en: { morning: "Log today's mood 🌤️", evening: 'How was your day? Log it 🌙' },
+}
 
-async function sendExpoPush(tokens: string[], body: string) {
-  const chunks: string[][] = []
-  for (let i = 0; i < tokens.length; i += 100) chunks.push(tokens.slice(i, i + 100))
+interface PushToken {
+  token: string
+  name: string | null
+  language: string | null
+}
 
-  for (const chunk of chunks) {
+async function sendExpoPush(messages: { to: string; title: string; body: string }[]) {
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100).map((m) => ({ ...m, sound: 'default' }))
     await fetch('https://exp.host/--/api/v2/push/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify(
-        chunk.map((token) => ({ to: token, title: 'Be Positive', body, sound: 'default' }))
-      ),
+      body: JSON.stringify(chunk),
     }).catch(() => null)
   }
 }
@@ -53,34 +80,42 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Server not configured' }, { status: 503, headers: corsHeaders })
   }
 
-  const tokensResponse = await fetch(`${supabaseUrl}/rest/v1/push_tokens?select=token`, {
+  const tokensResponse = await fetch(`${supabaseUrl}/rest/v1/push_tokens?select=token,name,language`, {
     headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
   })
   if (!tokensResponse.ok) {
     return Response.json({ error: 'Failed to load push tokens' }, { status: 502, headers: corsHeaders })
   }
-  const rows = (await tokensResponse.json()) as { token: string }[]
-  const tokens = rows.map((row) => row.token).filter(Boolean)
+  const rows = (await tokensResponse.json()) as PushToken[]
 
-  if (tokens.length === 0) {
+  if (rows.length === 0) {
     return Response.json({ sent: 0 }, { headers: corsHeaders })
   }
 
-  const instruction = slot === 'evening' ? EVENING_INSTRUCTION : MORNING_INSTRUCTION
-  const result = await generateGeminiReply({
-    systemInstruction: instruction,
-    message: slot === 'evening' ? 'Axşam bildirişi yaz.' : 'Səhər bildirişi yaz.',
-    maxOutputTokens: 120,
-  })
+  // Generate one AI message per language present among registered devices,
+  // then personalize the title with each user's name.
+  const languages = Array.from(new Set(rows.map((r) => (r.language === 'en' ? 'en' : 'az'))))
+  const textByLanguage: Record<string, string> = {}
 
-  const text =
-    'text' in result
-      ? result.text.replace(/^"|"$/g, '')
-      : slot === 'evening'
-        ? 'Günü necə keçirdin? Əhvalını qeyd et 🌙'
-        : 'Bugünkü əhvalını qeyd et 🌤️'
+  for (const lang of languages) {
+    const instruction = INSTRUCTIONS[lang][slot]
+    const result = await generateGeminiReply({
+      systemInstruction: instruction,
+      message: slot === 'evening' ? 'Write the evening notification.' : 'Write the morning notification.',
+      maxOutputTokens: 120,
+    })
+    textByLanguage[lang] = 'text' in result ? result.text.replace(/^"|"$/g, '') : FALLBACK[lang][slot]
+  }
 
-  await sendExpoPush(tokens, text)
+  const messages = rows
+    .filter((r) => r.token)
+    .map((r) => {
+      const lang = r.language === 'en' ? 'en' : 'az'
+      const title = r.name ? `${lang === 'en' ? 'Hi' : 'Salam'}, ${r.name}!` : 'Be Positive'
+      return { to: r.token, title, body: textByLanguage[lang] }
+    })
 
-  return Response.json({ sent: tokens.length, message: text }, { headers: corsHeaders })
+  await sendExpoPush(messages)
+
+  return Response.json({ sent: messages.length }, { headers: corsHeaders })
 })

@@ -5,7 +5,8 @@ import FactorsScreen from './FactorsScreen'
 import SavedScreen from './SavedScreen'
 import { fetchAiCoachMessage } from '../aiCoach'
 import { generateCoachMessage } from '../coach'
-import { MOOD_OPTIONS } from '../types'
+import { MOOD_ORDER } from '../i18n/content'
+import { useLocale } from '../i18n/LocaleContext'
 import type { JournalEntry } from '../types'
 
 interface TodayScreenProps {
@@ -16,6 +17,7 @@ interface TodayScreenProps {
 type Step = 'checkin' | 'factors' | 'saved'
 
 export default function TodayScreen({ onSave, streak }: TodayScreenProps) {
+  const { locale } = useLocale()
   const [step, setStep] = useState<Step>('checkin')
   const [moodIndex, setMoodIndex] = useState(2)
   const [factors, setFactors] = useState<string[]>([])
@@ -32,12 +34,12 @@ export default function TodayScreen({ onSave, streak }: TodayScreenProps) {
   }
 
   const handleFactorsContinue = async () => {
-    const mood = MOOD_OPTIONS[moodIndex].key
+    const mood = MOOD_ORDER[moodIndex]
     setStep('saved')
     setLoading(true)
 
-    const aiMessage = await fetchAiCoachMessage(mood, note, gratitude)
-    const message = aiMessage ?? generateCoachMessage(mood, note)
+    const aiMessage = await fetchAiCoachMessage(mood, note, gratitude, locale)
+    const message = aiMessage ?? generateCoachMessage(mood, note, locale)
 
     const entry: JournalEntry = {
       id: `${Date.now()}`,

@@ -1,17 +1,17 @@
 import { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
-import { MOOD_OPTIONS, type JournalEntry } from '../types'
+import type { JournalEntry } from '../types'
+import { useLocale } from '../i18n/LocaleContext'
+import { DAY_LABELS, MOOD_ORDER, factorLabel } from '../i18n/content'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 interface InsightsScreenProps {
   entries: JournalEntry[]
 }
 
-const DAY_LABELS = ['B.e', 'Ç.a', 'Ç', 'C.a', 'C', 'Ş', 'B']
-
 function moodIndex(entry: JournalEntry) {
-  return MOOD_OPTIONS.findIndex((option) => option.key === entry.mood)
+  return MOOD_ORDER.indexOf(entry.mood)
 }
 
 function startOfDay(date: Date) {
@@ -21,6 +21,9 @@ function startOfDay(date: Date) {
 }
 
 export default function InsightsScreen({ entries }: InsightsScreenProps) {
+  const { t, locale } = useLocale()
+  const dayLabels = DAY_LABELS[locale]
+
   const week = useMemo(() => {
     const today = startOfDay(new Date())
     const mondayOffset = (today.getDay() + 6) % 7
@@ -34,9 +37,9 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
       const avg = dayEntries.length
         ? dayEntries.reduce((sum, e) => sum + moodIndex(e), 0) / dayEntries.length
         : null
-      return { label: DAY_LABELS[i], avg }
+      return { label: dayLabels[i], avg }
     })
-  }, [entries])
+  }, [entries, dayLabels])
 
   const weekAverage = useMemo(() => {
     const values = week.map((d) => d.avg).filter((v): v is number => v !== null)
@@ -96,11 +99,11 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>İçgörülər</Text>
+      <Text style={styles.title}>{t('insights.title')}</Text>
 
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartLabel}>Bu həftə</Text>
+          <Text style={styles.chartLabel}>{t('insights.weekLabel')}</Text>
           <Text style={styles.chartValue}>{weekAverage === null ? '—' : (weekAverage + 1).toFixed(1)}</Text>
         </View>
 
@@ -113,7 +116,7 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
           )}
         </Svg>
         <View style={styles.dayLabelsRow}>
-          {DAY_LABELS.map((d) => (
+          {dayLabels.map((d) => (
             <Text key={d} style={styles.dayLabel}>
               {d}
             </Text>
@@ -123,10 +126,12 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
 
       {topFactorInsight && (
         <View style={styles.patternCard}>
-          <Text style={styles.patternTag}>NÜMUNƏ TAPILDI</Text>
+          <Text style={styles.patternTag}>{t('insights.patternTag')}</Text>
           <Text style={styles.patternText}>
-            {topFactorInsight.factor} olan günlərdə əhvalın orta hesabla{' '}
-            {Math.abs(topFactorInsight.diff).toFixed(1)} bal {topFactorInsight.diff >= 0 ? 'yüksək' : 'aşağı'} olur.
+            {t(topFactorInsight.diff >= 0 ? 'insights.patternHigh' : 'insights.patternLow', {
+              factor: factorLabel(topFactorInsight.factor, locale),
+              diff: Math.abs(topFactorInsight.diff).toFixed(1),
+            })}
           </Text>
         </View>
       )}
@@ -134,15 +139,15 @@ export default function InsightsScreen({ entries }: InsightsScreenProps) {
       {topFactor && (
         <View style={styles.rowCard}>
           <View>
-            <Text style={styles.rowLabel}>Ən çox təsir edən</Text>
+            <Text style={styles.rowLabel}>{t('insights.topFactorLabel')}</Text>
             <Text style={styles.rowValue}>
-              {topFactor.factor} · {topFactor.count} gün
+              {factorLabel(topFactor.factor, locale)} · {topFactor.count} {t('insights.topFactorDaysSuffix')}
             </Text>
           </View>
         </View>
       )}
 
-      {entries.length === 0 && <Text style={styles.empty}>Hələ heç bir qeydin yoxdur.</Text>}
+      {entries.length === 0 && <Text style={styles.empty}>{t('insights.empty')}</Text>}
     </ScrollView>
   )
 }

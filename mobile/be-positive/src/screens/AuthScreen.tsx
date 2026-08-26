@@ -11,11 +11,15 @@ import {
   View,
 } from 'react-native'
 import { useAuth } from '../authContext'
+import { useLocale } from '../i18n/LocaleContext'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 import { colors, radius, shadow } from '../theme'
 
 export default function AuthScreen() {
   const { signIn, signUp, resetPassword } = useAuth()
+  const { t } = useLocale()
   const [mode, setMode] = useState<'signIn' | 'signUp' | 'forgot'>('signIn')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,7 +32,7 @@ export default function AuthScreen() {
 
     if (mode === 'forgot') {
       if (!email.trim()) {
-        setError('Email daxil edin')
+        setError(t('auth.errorEmailOnly'))
         return
       }
       setLoading(true)
@@ -38,12 +42,12 @@ export default function AuthScreen() {
         setError(message)
         return
       }
-      setInfo('Email-ə şifrə bərpa linki göndərildi. Poçt qutunu yoxla.')
+      setInfo(t('auth.infoResetSent'))
       return
     }
 
     if (!email.trim() || !password) {
-      setError('Email və parolu daxil edin')
+      setError(t('auth.errorFillFields'))
       return
     }
     setLoading(true)
@@ -55,14 +59,14 @@ export default function AuthScreen() {
       return
     }
 
-    const result = await signUp(email.trim(), password)
+    const result = await signUp(email.trim(), password, name)
     setLoading(false)
     if (result.error) {
       setError(result.error)
       return
     }
     if (result.needsConfirmation) {
-      setInfo('Qeydiyyat uğurlu oldu! Email-inizi yoxlayın (təsdiq linki göndərilib).')
+      setInfo(t('auth.infoConfirmEmail'))
     }
     // Otherwise a session was created immediately and Root() will switch to MainApp.
   }
@@ -73,14 +77,28 @@ export default function AuthScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Be Positive</Text>
+        <View style={styles.languageRow}>
+          <LanguageSwitcher />
+        </View>
+
+        <Text style={styles.title}>{t('auth.title')}</Text>
         <Text style={styles.subtitle}>
-          {mode === 'signIn' ? 'Hesabınıza daxil olun' : mode === 'signUp' ? 'Yeni hesab yaradın' : 'Şifrəni bərpa et'}
+          {mode === 'signIn' ? t('auth.subtitleSignIn') : mode === 'signUp' ? t('auth.subtitleSignUp') : t('auth.subtitleForgot')}
         </Text>
+
+        {mode === 'signUp' && (
+          <TextInput
+            style={styles.input}
+            placeholder={t('auth.namePlaceholder')}
+            placeholderTextColor={colors.muted}
+            value={name}
+            onChangeText={setName}
+          />
+        )}
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder={t('auth.emailPlaceholder')}
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           keyboardType="email-address"
@@ -90,7 +108,7 @@ export default function AuthScreen() {
         {mode !== 'forgot' && (
           <TextInput
             style={styles.input}
-            placeholder="Parol"
+            placeholder={t('auth.passwordPlaceholder')}
             placeholderTextColor={colors.muted}
             secureTextEntry
             value={password}
@@ -106,7 +124,7 @@ export default function AuthScreen() {
             <ActivityIndicator color="#ffffff" />
           ) : (
             <Text style={styles.primaryButtonText}>
-              {mode === 'signIn' ? 'Daxil ol' : mode === 'signUp' ? 'Qeydiyyatdan keç' : 'Bərpa linki göndər'}
+              {mode === 'signIn' ? t('auth.signInButton') : mode === 'signUp' ? t('auth.signUpButton') : t('auth.forgotButton')}
             </Text>
           )}
         </Pressable>
@@ -120,7 +138,7 @@ export default function AuthScreen() {
             }}
             style={styles.forgotLink}
           >
-            <Text style={styles.forgotText}>Şifrəni unutmusan?</Text>
+            <Text style={styles.forgotText}>{t('auth.forgotLink')}</Text>
           </Pressable>
         )}
 
@@ -133,11 +151,7 @@ export default function AuthScreen() {
           style={styles.switchLink}
         >
           <Text style={styles.switchText}>
-            {mode === 'signIn'
-              ? 'Hesabınız yoxdur? Qeydiyyatdan keçin'
-              : mode === 'signUp'
-                ? 'Artıq hesabınız var? Daxil olun'
-                : 'Daxil ol səhifəsinə qayıt'}
+            {mode === 'signIn' ? t('auth.switchToSignUp') : mode === 'signUp' ? t('auth.switchToSignIn') : t('auth.backToSignIn')}
           </Text>
         </Pressable>
       </ScrollView>
@@ -154,6 +168,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 28,
+  },
+  languageRow: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
   },
   title: {
     fontSize: 30,

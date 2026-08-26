@@ -1,4 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useLocale } from '../i18n/LocaleContext'
+import type { TranslationKey } from '../i18n/translations'
 import { colors } from '../theme'
 
 export type TabKey = 'today' | 'insights' | 'chat' | 'month' | 'profile'
@@ -8,15 +10,17 @@ interface TabBarProps {
   onChange: (tab: TabKey) => void
 }
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'today', label: 'Bugün', icon: '🏠' },
-  { key: 'insights', label: 'İçgörü', icon: '📊' },
-  { key: 'chat', label: 'Söhbət', icon: '✨' },
-  { key: 'month', label: 'Ay', icon: '📅' },
-  { key: 'profile', label: 'Profil', icon: '👤' },
+const TABS: { key: TabKey; labelKey: TranslationKey; icon: string }[] = [
+  { key: 'today', labelKey: 'tabs.today', icon: '🏠' },
+  { key: 'insights', labelKey: 'tabs.insights', icon: '📊' },
+  { key: 'chat', labelKey: 'tabs.chat', icon: '✨' },
+  { key: 'month', labelKey: 'tabs.month', icon: '📅' },
+  { key: 'profile', labelKey: 'tabs.profile', icon: '👤' },
 ]
 
 export default function TabBar({ tab, onChange }: TabBarProps) {
+  const { t } = useLocale()
+
   return (
     <View style={styles.bar}>
       {TABS.map((item) => {
@@ -24,7 +28,7 @@ export default function TabBar({ tab, onChange }: TabBarProps) {
         return (
           <Pressable key={item.key} style={styles.tab} onPress={() => onChange(item.key)}>
             <Text style={[styles.icon, active && styles.iconActive]}>{item.icon}</Text>
-            <Text style={[styles.label, active && styles.labelActive]}>{item.label}</Text>
+            <Text style={[styles.label, active && styles.labelActive]}>{t(item.labelKey)}</Text>
             {active && <View style={styles.dot} />}
           </Pressable>
         )

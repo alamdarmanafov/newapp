@@ -14,6 +14,7 @@ import ResetPasswordScreen from './src/screens/ResetPasswordScreen'
 import OnboardingScreen from './src/screens/OnboardingScreen'
 import EntryDetailScreen from './src/screens/EntryDetailScreen'
 import { AuthProvider, useAuth } from './src/authContext'
+import { LocaleProvider } from './src/i18n/LocaleContext'
 import { computeStreak, deleteEntry, loadEntries, saveEntry, updateEntry } from './src/storage'
 import type { JournalEntry } from './src/types'
 import { colors } from './src/theme'
@@ -93,7 +94,7 @@ function Root() {
   return session ? <MainApp /> : <AuthScreen />
 }
 
-export default function App() {
+function AppBody() {
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -121,6 +122,14 @@ export default function App() {
     <AuthProvider>
       <Root />
     </AuthProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <LocaleProvider>
+      <AppBody />
+    </LocaleProvider>
   )
 }
 

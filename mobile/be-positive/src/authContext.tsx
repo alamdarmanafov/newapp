@@ -10,7 +10,11 @@ interface AuthContextValue {
   loading: boolean
   recovering: boolean
   signIn: (email: string, password: string) => Promise<string | null>
-  signUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>
+  signUp: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<{ error: string | null; needsConfirmation: boolean }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<string | null>
   updatePassword: (newPassword: string) => Promise<string | null>
@@ -71,8 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error ? error.message : null
   }
 
-  const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  const signUp = async (email: string, password: string, name: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name.trim() } },
+    })
     if (error) return { error: error.message, needsConfirmation: false }
     // If email confirmation is disabled in Supabase, signUp returns a session
     // immediately; otherwise the user must confirm via email before one exists.

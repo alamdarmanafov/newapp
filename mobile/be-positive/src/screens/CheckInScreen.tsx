@@ -1,7 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
 import { PanResponder, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native'
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg'
-import { MOOD_OPTIONS, type MoodKey } from '../types'
+import { useAuth } from '../authContext'
+import { useLocale } from '../i18n/LocaleContext'
+import { MOOD_ORDER, moodLabel } from '../i18n/content'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 const SIZE = 300
@@ -23,8 +25,11 @@ interface CheckInScreenProps {
 
 export default function CheckInScreen({ value, onChange, onContinue }: CheckInScreenProps) {
   const [layout, setLayout] = useState({ width: SIZE, height: SIZE })
-  const mood = MOOD_OPTIONS[value]
+  const { session } = useAuth()
+  const { t, locale } = useLocale()
+  const mood = MOOD_ORDER[value]
   const moodColor = MOOD_COLORS[value]
+  const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
 
   const updateFromTouch = (e: GestureResponderEvent) => {
     const { locationX, locationY } = e.nativeEvent
@@ -32,8 +37,8 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
     const py = (locationY / layout.height) * SIZE
     let ang = Math.atan2(py - CY, px - CX)
     if (ang > 0) ang = px < CX ? -Math.PI : 0
-    const t = (ang + Math.PI) / Math.PI
-    onChange(Math.max(0, Math.min(4, Math.round(t * 4))))
+    const t2 = (ang + Math.PI) / Math.PI
+    onChange(Math.max(0, Math.min(4, Math.round(t2 * 4))))
   }
 
   const panResponder = useRef(
@@ -53,8 +58,8 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
         style={[styles.glow, { backgroundColor: `${moodColor}22` }]}
         pointerEvents="none"
       />
-      <Text style={styles.greeting}>Salam!</Text>
-      <Text style={styles.title}>Bu gün necə keçdi?</Text>
+      <Text style={styles.greeting}>{name ? t('checkin.greeting', { name }) : t('checkin.greetingNoName')}</Text>
+      <Text style={styles.title}>{t('checkin.title')}</Text>
 
       <View
         style={styles.gaugeWrap}
@@ -77,7 +82,7 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
             strokeLinecap="round"
             strokeDasharray={`${(ARC_LEN * value) / 4} ${ARC_LEN}`}
           />
-          {MOOD_OPTIONS.map((_, i) => {
+          {MOOD_ORDER.map((_, i) => {
             const p = detent(i)
             return i === value ? null : <Circle key={i} cx={p.x} cy={p.y} r={3} fill={colors.border} />
           })}
@@ -85,7 +90,7 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
           <Circle cx={knob.x} cy={knob.y} r={15} fill={moodColor} />
           <Circle cx={knob.x} cy={knob.y} r={15} fill="none" stroke="#ffffff" strokeWidth={2} />
           <SvgText x={CX} y={CY - 2} textAnchor="middle" fontSize={34} fontWeight="700" fill={colors.text}>
-            {mood.label}
+            {moodLabel(mood, locale)}
           </SvgText>
           <SvgText x={CX} y={CY + 22} textAnchor="middle" fontSize={12} fill={colors.muted}>
             {value + 1} / 5
@@ -93,11 +98,11 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
         </Svg>
       </View>
 
-      <Text style={styles.hint}>Dairəni sürüşdür</Text>
+      <Text style={styles.hint}>{t('checkin.hint')}</Text>
 
       <View style={styles.buttonRow}>
         <Pressable onPress={onContinue} style={[styles.primaryButton, { backgroundColor: moodColor }]}>
-          <Text style={styles.primaryButtonText}>Davam et</Text>
+          <Text style={styles.primaryButtonText}>{t('checkin.continue')}</Text>
         </Pressable>
       </View>
     </View>

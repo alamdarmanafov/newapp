@@ -1,4 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, View, Pressable } from 'react-native'
+import { useLocale } from '../i18n/LocaleContext'
 import { colors, radius, shadow } from '../theme'
 
 interface SavedScreenProps {
@@ -9,6 +10,8 @@ interface SavedScreenProps {
 }
 
 export default function SavedScreen({ loading, coachMessage, streak, onFinish }: SavedScreenProps) {
+  const { t } = useLocale()
+
   return (
     <View style={styles.root}>
       <View style={styles.glow} pointerEvents="none" />
@@ -18,11 +21,11 @@ export default function SavedScreen({ loading, coachMessage, streak, onFinish }:
           {loading ? <ActivityIndicator color="#ffffff" size="large" /> : <Text style={styles.badgeIcon}>✓</Text>}
         </View>
 
-        <Text style={styles.title}>{loading ? 'Düşünürəm...' : 'Qeyd olundu'}</Text>
+        <Text style={styles.title}>{loading ? t('saved.thinking') : t('saved.title')}</Text>
 
         {!loading && coachMessage && (
           <View style={styles.coachCard}>
-            <Text style={styles.coachLabel}>Be Positive deyir</Text>
+            <Text style={styles.coachLabel}>{t('saved.coachLabel')}</Text>
             <Text style={styles.coachMessage}>{coachMessage}</Text>
           </View>
         )}
@@ -33,8 +36,10 @@ export default function SavedScreen({ loading, coachMessage, streak, onFinish }:
               <Text style={styles.streakIcon}>🔥</Text>
             </View>
             <View>
-              <Text style={styles.streakValue}>{streak} gün</Text>
-              <Text style={styles.streakLabel}>ardıcıl qeyd — davam et</Text>
+              <Text style={styles.streakValue}>
+                {streak} {t('saved.streakSuffix')}
+              </Text>
+              <Text style={styles.streakLabel}>{t('saved.streakLabel')}</Text>
             </View>
           </View>
         )}
@@ -42,7 +47,7 @@ export default function SavedScreen({ loading, coachMessage, streak, onFinish }:
 
       <View style={styles.footer}>
         <Pressable onPress={onFinish} disabled={loading} style={[styles.finishButton, loading && styles.finishButtonDisabled]}>
-          <Text style={styles.finishButtonText}>Bitir</Text>
+          <Text style={styles.finishButtonText}>{t('saved.finish')}</Text>
         </Pressable>
       </View>
     </View>

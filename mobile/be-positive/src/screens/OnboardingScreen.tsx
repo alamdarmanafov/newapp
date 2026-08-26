@@ -1,29 +1,20 @@
 import { useRef, useState } from 'react'
 import { Dimensions, FlatList, Pressable, StyleSheet, Text, View, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native'
+import { useLocale } from '../i18n/LocaleContext'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import type { TranslationKey } from '../i18n/translations'
 import { colors, radius, shadow } from '../theme'
 
 interface Slide {
   emoji: string
-  title: string
-  body: string
+  titleKey: TranslationKey
+  bodyKey: TranslationKey
 }
 
 const SLIDES: Slide[] = [
-  {
-    emoji: '🌤️',
-    title: 'Əhvalını izlə',
-    body: 'Hər gün bir neçə saniyədə əhvalını qeyd et və zamanla necə dəyişdiyini gör.',
-  },
-  {
-    emoji: '✨',
-    title: 'AI dəstəyi al',
-    body: 'Qeydlərinə əsaslanan fərdi tövsiyələr və istənilən vaxt AI ilə söhbət et.',
-  },
-  {
-    emoji: '📈',
-    title: 'İnkişafını gör',
-    body: 'Streak, aylıq təqvim və içgörülərlə vərdişini qur, nəyin sənə təsir etdiyini kəşf et.',
-  },
+  { emoji: '🌤️', titleKey: 'onboarding.slide1Title', bodyKey: 'onboarding.slide1Body' },
+  { emoji: '✨', titleKey: 'onboarding.slide2Title', bodyKey: 'onboarding.slide2Body' },
+  { emoji: '📈', titleKey: 'onboarding.slide3Title', bodyKey: 'onboarding.slide3Body' },
 ]
 
 const { width } = Dimensions.get('window')
@@ -33,6 +24,7 @@ interface OnboardingScreenProps {
 }
 
 export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
+  const { t } = useLocale()
   const [index, setIndex] = useState(0)
   const listRef = useRef<FlatList<Slide>>(null)
   const isLast = index === SLIDES.length - 1
@@ -52,14 +44,17 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
 
   return (
     <View style={styles.root}>
-      <Pressable onPress={onFinish} style={styles.skip}>
-        <Text style={styles.skipText}>Keç</Text>
-      </Pressable>
+      <View style={styles.topRow}>
+        <LanguageSwitcher />
+        <Pressable onPress={onFinish}>
+          <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
+        </Pressable>
+      </View>
 
       <FlatList
         ref={listRef}
         data={SLIDES}
-        keyExtractor={(item) => item.title}
+        keyExtractor={(item) => item.titleKey}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -69,8 +64,8 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
             <View style={styles.emojiWrap}>
               <Text style={styles.emoji}>{item.emoji}</Text>
             </View>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.body}>{item.body}</Text>
+            <Text style={styles.title}>{t(item.titleKey)}</Text>
+            <Text style={styles.body}>{t(item.bodyKey)}</Text>
           </View>
         )}
       />
@@ -83,7 +78,7 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
         </View>
 
         <Pressable onPress={handleNext} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>{isLast ? 'Başla' : 'İrəli'}</Text>
+          <Text style={styles.primaryButtonText}>{isLast ? t('onboarding.start') : t('onboarding.next')}</Text>
         </Pressable>
       </View>
     </View>
@@ -96,11 +91,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingTop: 60,
   },
-  skip: {
-    position: 'absolute',
-    top: 64,
-    right: 24,
-    zIndex: 1,
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    marginBottom: 8,
   },
   skipText: {
     fontSize: 14,

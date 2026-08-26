@@ -1,10 +1,11 @@
 import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from 'react-native'
-import { FACTOR_OPTIONS } from '../types'
+import { useLocale } from '../i18n/LocaleContext'
+import { FACTOR_DEFS } from '../i18n/content'
 import { colors, radius, shadow } from '../theme'
 
 interface FactorsScreenProps {
   factors: string[]
-  onToggleFactor: (label: string) => void
+  onToggleFactor: (id: string) => void
   note: string
   onChangeNote: (value: string) => void
   gratitude: string
@@ -21,6 +22,8 @@ export default function FactorsScreen({
   onChangeGratitude,
   onContinue,
 }: FactorsScreenProps) {
+  const { t, locale } = useLocale()
+
   return (
     <View style={styles.root}>
       <View style={styles.header}>
@@ -29,28 +32,30 @@ export default function FactorsScreen({
           <View style={[styles.progressDot, styles.progressDotActive]} />
           <View style={styles.progressDot} />
         </View>
-        <Text style={styles.title}>Nə təsir etdi?</Text>
-        <Text style={styles.subtitle}>İstədiyin qədər seç (istəyə bağlı)</Text>
+        <Text style={styles.title}>{t('factors.title')}</Text>
+        <Text style={styles.subtitle}>{t('factors.subtitle')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.chipsRow}>
-          {FACTOR_OPTIONS.map(({ emoji, label }) => {
-            const on = factors.includes(label)
+          {FACTOR_DEFS.map(({ id, emoji }) => {
+            const on = factors.includes(id)
             return (
-              <Pressable key={label} onPress={() => onToggleFactor(label)} style={[styles.chip, on && styles.chipOn]}>
+              <Pressable key={id} onPress={() => onToggleFactor(id)} style={[styles.chip, on && styles.chipOn]}>
                 <Text style={styles.chipEmoji}>{emoji}</Text>
-                <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>{label}</Text>
+                <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>
+                  {FACTOR_DEFS.find((f) => f.id === id)?.[locale]}
+                </Text>
               </Pressable>
             )
           })}
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Nə düşünürsən?</Text>
+          <Text style={styles.cardLabel}>{t('factors.noteLabel')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Bir cümlə ilə yaz..."
+            placeholder={t('factors.notePlaceholder')}
             placeholderTextColor={colors.muted}
             multiline
             value={note}
@@ -59,10 +64,10 @@ export default function FactorsScreen({
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Nəyə görə minnətdarsan?</Text>
+          <Text style={styles.cardLabel}>{t('factors.gratitudeLabel')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Kiçik də olsa, bir şey yaz..."
+            placeholder={t('factors.gratitudePlaceholder')}
             placeholderTextColor={colors.muted}
             multiline
             value={gratitude}
@@ -73,7 +78,7 @@ export default function FactorsScreen({
 
       <View style={styles.footer}>
         <Pressable onPress={onContinue} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Qeyd et</Text>
+          <Text style={styles.primaryButtonText}>{t('factors.continue')}</Text>
         </Pressable>
       </View>
     </View>

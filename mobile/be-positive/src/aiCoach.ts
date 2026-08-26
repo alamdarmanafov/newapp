@@ -1,4 +1,5 @@
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from './config'
+import type { Locale } from './i18n/content'
 import type { MoodKey } from './types'
 
 const REQUEST_TIMEOUT_MS = 12000
@@ -9,7 +10,8 @@ const REQUEST_TIMEOUT_MS = 12000
 export async function fetchAiCoachMessage(
   mood: MoodKey,
   note: string,
-  gratitude: string
+  gratitude: string,
+  locale: Locale = 'az'
 ): Promise<string | null> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
@@ -22,7 +24,7 @@ export async function fetchAiCoachMessage(
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({ mood, note, gratitude }),
+      body: JSON.stringify({ mood, note, gratitude, language: locale }),
       signal: controller.signal,
     })
 

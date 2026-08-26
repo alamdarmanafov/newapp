@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useAuth } from '../authContext'
-import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders } from '../notifications'
+import { useLocale } from '../i18n/LocaleContext'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { colors, radius, shadow } from '../theme'
 import type { JournalEntry } from '../types'
 
@@ -11,23 +13,33 @@ interface ProfileScreenProps {
 
 export default function ProfileScreen({ entries }: ProfileScreenProps) {
   const { session, signOut } = useAuth()
+  const { t, locale } = useLocale()
   const userId = session?.user.id
+  const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
   const [remindersOn, setRemindersOn] = useState(false)
 
   useEffect(() => {
     if (userId) areNotificationsEnabled(userId).then(setRemindersOn)
   }, [userId])
 
+  useEffect(() => {
+    if (userId && remindersOn) updatePushTokenLanguage(userId, locale)
+  }, [locale, userId, remindersOn])
+
   const memberSince = session?.user.created_at
-    ? new Date(session.user.created_at).toLocaleDateString('az-AZ', { day: '2-digit', month: 'long', year: 'numeric' })
+    ? new Date(session.user.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'az-AZ', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
     : '—'
 
   const toggleReminders = async (value: boolean) => {
     if (!userId) return
     if (value) {
-      const granted = await enableDailyReminders(userId)
+      const granted = await enableDailyReminders(userId, locale, name)
       if (!granted) {
-        Alert.alert('İcazə verilmədi', 'Bildirişləri aktivləşdirmək üçün telefon ayarlarından icazə ver.')
+        Alert.alert(t('profile.permissionDeniedTitle'), t('profile.permissionDeniedBody'))
         return
       }
       setRemindersOn(true)
@@ -39,24 +51,31 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{(session?.user.email ?? '?').charAt(0).toUpperCase()}</Text>
+      <View style={styles.languageRow}>
+        <LanguageSwitcher />
       </View>
 
-      <Text style={styles.email}>{session?.user.email}</Text>
-      <Text style={styles.memberSince}>Qeydiyyat tarixi: {memberSince}</Text>
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{(name || session?.user.email || '?').charAt(0).toUpperCase()}</Text>
+      </View>
+
+      <Text style={styles.email}>{name || session?.user.email}</Text>
+      {name && <Text style={styles.emailSub}>{session?.user.email}</Text>}
+      <Text style={styles.memberSince}>
+        {t('profile.memberSince')}: {memberSince}
+      </Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{entries.length}</Text>
-          <Text style={styles.statLabel}>Gündəlik qeyd</Text>
+          <Text style={styles.statLabel}>{t('profile.entriesLabel')}</Text>
         </View>
       </View>
 
       <View style={styles.settingRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.settingLabel}>Gündəlik xatırlatma</Text>
-          <Text style={styles.settingHint}>Saat 08:00 və 20:00-da AI-nin yazdığı bildiriş</Text>
+          <Text style={styles.settingLabel}>{t('profile.remindersLabel')}</Text>
+          <Text style={styles.settingHint}>{t('profile.remindersHint')}</Text>
         </View>
         <Switch
           value={remindersOn}
@@ -67,7 +86,7 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
       </View>
 
       <Pressable style={styles.signOutButton} onPress={signOut}>
-        <Text style={styles.signOutText}>Çıxış</Text>
+        <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
       </Pressable>
     </View>
   )
@@ -79,6 +98,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     paddingTop: 40,
+  },
+  languageRow: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
   },
   avatar: {
     width: 84,
@@ -99,6 +123,11 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: colors.text,
+  },
+  emailSub: {
+    marginTop: 2,
+    fontSize: 12.5,
+    color: colors.muted,
   },
   memberSince: {
     marginTop: 4,

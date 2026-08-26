@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { FACTOR_OPTIONS, MOOD_OPTIONS, type JournalEntry } from '../types'
+import type { JournalEntry } from '../types'
+import { useLocale } from '../i18n/LocaleContext'
+import { FACTOR_DEFS, MOOD_META, MOOD_ORDER, moodLabel } from '../i18n/content'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 
 interface EntryDetailScreenProps {
@@ -11,6 +13,7 @@ interface EntryDetailScreenProps {
 }
 
 export default function EntryDetailScreen({ entry, onClose, onSave, onDelete }: EntryDetailScreenProps) {
+  const { t, locale } = useLocale()
   const [moodIndex, setMoodIndex] = useState(0)
   const [factors, setFactors] = useState<string[]>([])
   const [note, setNote] = useState('')
@@ -19,7 +22,7 @@ export default function EntryDetailScreen({ entry, onClose, onSave, onDelete }: 
 
   if (entry && entry.id !== openedId) {
     setOpenedId(entry.id)
-    setMoodIndex(Math.max(0, MOOD_OPTIONS.findIndex((option) => option.key === entry.mood)))
+    setMoodIndex(Math.max(0, MOOD_ORDER.indexOf(entry.mood)))
     setFactors(entry.factors ?? [])
     setNote(entry.note)
     setGratitude(entry.gratitude)
@@ -27,14 +30,14 @@ export default function EntryDetailScreen({ entry, onClose, onSave, onDelete }: 
 
   if (!entry) return null
 
-  const toggleFactor = (label: string) => {
-    setFactors((current) => (current.includes(label) ? current.filter((item) => item !== label) : [...current, label]))
+  const toggleFactor = (id: string) => {
+    setFactors((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
   }
 
   const handleSave = () => {
     onSave({
       ...entry,
-      mood: MOOD_OPTIONS[moodIndex].key,
+      mood: MOOD_ORDER[moodIndex],
       factors,
       note: note.trim(),
       gratitude: gratitude.trim(),
@@ -42,13 +45,13 @@ export default function EntryDetailScreen({ entry, onClose, onSave, onDelete }: 
   }
 
   const handleDelete = () => {
-    Alert.alert('Qeydi sil', 'Bu qeydi silmək istədiyinə əminsən?', [
-      { text: 'İmtina', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => onDelete(entry.id) },
+    Alert.alert(t('entryDetail.deleteConfirmTitle'), t('entryDetail.deleteConfirmBody'), [
+      { text: t('entryDetail.deleteCancel'), style: 'cancel' },
+      { text: t('entryDetail.deleteConfirmAction'), style: 'destructive', onPress: () => onDelete(entry.id) },
     ])
   }
 
-  const date = new Date(entry.createdAt).toLocaleDateString('az-AZ', {
+  const date = new Date(entry.createdAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'az-AZ', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -60,59 +63,54 @@ export default function EntryDetailScreen({ entry, onClose, onSave, onDelete }: 
         <View style={styles.header}>
           <Text style={styles.date}>{date}</Text>
           <Pressable onPress={onClose} hitSlop={12}>
-            <Text style={styles.closeText}>Bağla</Text>
+            <Text style={styles.closeText}>{t('entryDetail.close')}</Text>
           </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.moodRow}>
-            {MOOD_OPTIONS.map((option, i) => {
+            {MOOD_ORDER.map((key, i) => {
               const on = i === moodIndex
               return (
                 <Pressable
-                  key={option.key}
+                  key={key}
                   onPress={() => setMoodIndex(i)}
                   style={[styles.moodChip, on && { backgroundColor: MOOD_COLORS[i], borderColor: MOOD_COLORS[i] }]}
                 >
-                  <Text style={styles.moodEmoji}>{option.emoji}</Text>
-                  <Text style={[styles.moodLabel, on && styles.moodLabelOn]}>{option.label}</Text>
+                  <Text style={styles.moodEmoji}>{MOOD_META[key].emoji}</Text>
+                  <Text style={[styles.moodLabel, on && styles.moodLabelOn]}>{moodLabel(key, locale)}</Text>
                 </Pressable>
               )
             })}
           </View>
 
           <View style={styles.chipsRow}>
-            {FACTOR_OPTIONS.map(({ emoji, label }) => {
-              const on = factors.includes(label)
+            {FACTOR_DEFS.map(({ id, emoji }) => {
+              const on = factors.includes(id)
               return (
-                <Pressable key={label} onPress={() => toggleFactor(label)} style={[styles.chip, on && styles.chipOn]}>
+                <Pressable key={id} onPress={() => toggleFactor(id)} style={[styles.chip, on && styles.chipOn]}>
                   <Text style={styles.chipEmoji}>{emoji}</Text>
-                  <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>{label}</Text>
+                  <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>
+                    {FACTOR_DEFS.find((f) => f.id === id)?.[locale]}
+                  </Text>
                 </Pressable>
               )
             })}
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Nə düşünürsən?</Text>
-            <TextInput style={styles.input} placeholder="Bir cümlə ilə yaz..." placeholderTextColor={colors.muted} multiline value={note} onChangeText={setNote} />
+            <Text style={styles.cardLabel}>{t('entryDetail.noteLabel')}</Text>
+            <TextInput style={styles.input} multiline value={note} onChangeText={setNote} />
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Nəyə görə minnətdarsan?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Kiçik də olsa, bir şey yaz..."
-              placeholderTextColor={colors.muted}
-              multiline
-              value={gratitude}
-              onChangeText={setGratitude}
-            />
+            <Text style={styles.cardLabel}>{t('entryDetail.gratitudeLabel')}</Text>
+            <TextInput style={styles.input} multiline value={gratitude} onChangeText={setGratitude} />
           </View>
 
           {entry.coachMessage ? (
             <View style={styles.coachCard}>
-              <Text style={styles.coachLabel}>AI koçun tövsiyəsi</Text>
+              <Text style={styles.coachLabel}>{t('entryDetail.coachLabel')}</Text>
               <Text style={styles.coachText}>{entry.coachMessage}</Text>
             </View>
           ) : null}
@@ -120,10 +118,10 @@ export default function EntryDetailScreen({ entry, onClose, onSave, onDelete }: 
 
         <View style={styles.footer}>
           <Pressable onPress={handleDelete} style={styles.deleteButton}>
-            <Text style={styles.deleteText}>Sil</Text>
+            <Text style={styles.deleteText}>{t('entryDetail.delete')}</Text>
           </Pressable>
           <Pressable onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.saveText}>Yadda saxla</Text>
+            <Text style={styles.saveText}>{t('entryDetail.save')}</Text>
           </Pressable>
         </View>
       </View>

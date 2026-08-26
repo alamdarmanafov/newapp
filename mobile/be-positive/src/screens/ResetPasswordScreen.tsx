@@ -11,10 +11,12 @@ import {
   View,
 } from 'react-native'
 import { useAuth } from '../authContext'
+import { useLocale } from '../i18n/LocaleContext'
 import { colors, radius, shadow } from '../theme'
 
 export default function ResetPasswordScreen() {
   const { updatePassword, cancelRecovery } = useAuth()
+  const { t } = useLocale()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,11 +25,11 @@ export default function ResetPasswordScreen() {
   const handleSubmit = async () => {
     setError(null)
     if (password.length < 6) {
-      setError('Parol ən azı 6 simvol olmalıdır')
+      setError(t('reset.errorTooShort'))
       return
     }
     if (password !== confirm) {
-      setError('Parollar eyni deyil')
+      setError(t('reset.errorMismatch'))
       return
     }
     setLoading(true)
@@ -39,12 +41,12 @@ export default function ResetPasswordScreen() {
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Yeni parol təyin et</Text>
-        <Text style={styles.subtitle}>Hesabın üçün yeni parol yaz</Text>
+        <Text style={styles.title}>{t('reset.title')}</Text>
+        <Text style={styles.subtitle}>{t('reset.subtitle')}</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Yeni parol"
+          placeholder={t('reset.newPassword')}
           placeholderTextColor={colors.muted}
           secureTextEntry
           value={password}
@@ -52,7 +54,7 @@ export default function ResetPasswordScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Yeni parolu təkrarla"
+          placeholder={t('reset.confirmPassword')}
           placeholderTextColor={colors.muted}
           secureTextEntry
           value={confirm}
@@ -62,11 +64,11 @@ export default function ResetPasswordScreen() {
         {error && <Text style={styles.error}>{error}</Text>}
 
         <Pressable style={styles.primaryButton} onPress={handleSubmit} disabled={loading}>
-          {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>Yadda saxla</Text>}
+          {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>{t('reset.save')}</Text>}
         </Pressable>
 
         <Pressable onPress={cancelRecovery} style={styles.switchLink}>
-          <Text style={styles.switchText}>İmtina et</Text>
+          <Text style={styles.switchText}>{t('reset.cancel')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

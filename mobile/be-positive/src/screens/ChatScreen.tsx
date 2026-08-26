@@ -12,6 +12,7 @@ import {
 } from 'react-native'
 import { useAuth } from '../authContext'
 import { DAILY_CHAT_MESSAGE_LIMIT, FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '../config'
+import { useLocale } from '../i18n/LocaleContext'
 import { supabase } from '../supabaseClient'
 import { colors, radius, shadow } from '../theme'
 
@@ -21,6 +22,7 @@ function todayKey() {
 
 export default function ChatScreen() {
   const { session } = useAuth()
+  const { t, locale } = useLocale()
   const userId = session?.user.id
 
   const [usedToday, setUsedToday] = useState<number | null>(null)
@@ -67,14 +69,14 @@ export default function ChatScreen() {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ message: message.trim() }),
+        body: JSON.stringify({ message: message.trim(), language: locale }),
       })
       if (!response.ok) throw new Error('AI cavab vermədi')
       const data = (await response.json()) as { message?: string }
       setReply(data.message ?? 'Cavab alınmadı, bir az sonra yenidən cəhd edin.')
       setMessage('')
     } catch {
-      setError('Bir xəta baş verdi. Bir az sonra yenidən cəhd edin.')
+      setError(t('chat.error'))
     } finally {
       setLoading(false)
     }
@@ -83,18 +85,14 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Süni intellektlə söhbət</Text>
+        <Text style={styles.title}>{t('chat.title')}</Text>
         <Text style={styles.subtitle}>
-          {remaining === null
-            ? 'Yüklənir...'
-            : remaining > 0
-              ? `Bu gün ${remaining} sual haqqınız qalıb`
-              : 'Bu günlük sual limitiniz bitib, sabah yenidən sınayın'}
+          {remaining === null ? t('chat.loading') : remaining > 0 ? t('chat.remaining', { count: remaining }) : t('chat.limitReached')}
         </Text>
 
         <TextInput
           style={styles.textArea}
-          placeholder="Nə soruşmaq istəyirsiniz?"
+          placeholder={t('chat.placeholder')}
           placeholderTextColor={colors.muted}
           multiline
           numberOfLines={4}
@@ -113,12 +111,12 @@ export default function ChatScreen() {
           onPress={handleSend}
           disabled={!message.trim() || loading || !remaining}
         >
-          {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>Göndər</Text>}
+          {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>{t('chat.send')}</Text>}
         </Pressable>
 
         {reply && (
           <View style={styles.replyCard}>
-            <Text style={styles.replyLabel}>Cavab</Text>
+            <Text style={styles.replyLabel}>{t('chat.replyLabel')}</Text>
             <Text style={styles.replyText}>{reply}</Text>
           </View>
         )}
