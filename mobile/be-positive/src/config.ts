@@ -7,4 +7,4 @@ export const SUPABASE_ANON_KEY =
 // AI coach/chat are served as Supabase Edge Functions on the same project.
 export const FUNCTIONS_BASE_URL = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1`
 
-export const DAILY_CHAT_MESSAGE_LIMIT = 4
+export const DAILY_CHAT_MESSAGE_LIMIT = 3

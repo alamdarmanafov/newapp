@@ -19,6 +19,13 @@ export async function saveEntry(entry: JournalEntry): Promise<JournalEntry[]> {
   return updated
 }
 
+export async function updateEntry(updated: JournalEntry): Promise<JournalEntry[]> {
+  const entries = await loadEntries()
+  const next = entries.map((entry) => (entry.id === updated.id ? updated : entry))
+  await AsyncStorage.setItem(ENTRIES_KEY, JSON.stringify(next))
+  return next
+}
+
 export async function deleteEntry(id: string): Promise<JournalEntry[]> {
   const entries = await loadEntries()
   const updated = entries.filter((entry) => entry.id !== id)

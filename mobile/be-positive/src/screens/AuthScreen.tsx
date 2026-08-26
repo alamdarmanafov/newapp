@@ -14,8 +14,8 @@ import { useAuth } from '../authContext'
 import { colors, radius, shadow } from '../theme'
 
 export default function AuthScreen() {
-  const { signIn, signUp } = useAuth()
-  const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn')
+  const { signIn, signUp, resetPassword } = useAuth()
+  const [mode, setMode] = useState<'signIn' | 'signUp' | 'forgot'>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -25,6 +25,23 @@ export default function AuthScreen() {
   const handleSubmit = async () => {
     setError(null)
     setInfo(null)
+
+    if (mode === 'forgot') {
+      if (!email.trim()) {
+        setError('Email daxil edin')
+        return
+      }
+      setLoading(true)
+      const message = await resetPassword(email.trim())
+      setLoading(false)
+      if (message) {
+        setError(message)
+        return
+      }
+      setInfo('Email-ə şifrə bərpa linki göndərildi. Poçt qutunu yoxla.')
+      return
+    }
+
     if (!email.trim() || !password) {
       setError('Email və parolu daxil edin')
       return
@@ -51,7 +68,7 @@ export default function AuthScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Be Positive</Text>
         <Text style={styles.subtitle}>
-          {mode === 'signIn' ? 'Hesabınıza daxil olun' : 'Yeni hesab yaradın'}
+          {mode === 'signIn' ? 'Hesabınıza daxil olun' : mode === 'signUp' ? 'Yeni hesab yaradın' : 'Şifrəni bərpa et'}
         </Text>
 
         <TextInput
@@ -63,14 +80,16 @@ export default function AuthScreen() {
           value={email}
           onChangeText={setEmail}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Parol"
-          placeholderTextColor={colors.muted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        {mode !== 'forgot' && (
+          <TextInput
+            style={styles.input}
+            placeholder="Parol"
+            placeholderTextColor={colors.muted}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+        )}
 
         {error && <Text style={styles.error}>{error}</Text>}
         {info && <Text style={styles.info}>{info}</Text>}
@@ -80,21 +99,38 @@ export default function AuthScreen() {
             <ActivityIndicator color="#ffffff" />
           ) : (
             <Text style={styles.primaryButtonText}>
-              {mode === 'signIn' ? 'Daxil ol' : 'Qeydiyyatdan keç'}
+              {mode === 'signIn' ? 'Daxil ol' : mode === 'signUp' ? 'Qeydiyyatdan keç' : 'Bərpa linki göndər'}
             </Text>
           )}
         </Pressable>
 
+        {mode === 'signIn' && (
+          <Pressable
+            onPress={() => {
+              setMode('forgot')
+              setError(null)
+              setInfo(null)
+            }}
+            style={styles.forgotLink}
+          >
+            <Text style={styles.forgotText}>Şifrəni unutmusan?</Text>
+          </Pressable>
+        )}
+
         <Pressable
           onPress={() => {
-            setMode(mode === 'signIn' ? 'signUp' : 'signIn')
+            setMode(mode === 'signUp' ? 'signIn' : mode === 'forgot' ? 'signIn' : 'signUp')
             setError(null)
             setInfo(null)
           }}
           style={styles.switchLink}
         >
           <Text style={styles.switchText}>
-            {mode === 'signIn' ? 'Hesabınız yoxdur? Qeydiyyatdan keçin' : 'Artıq hesabınız var? Daxil olun'}
+            {mode === 'signIn'
+              ? 'Hesabınız yoxdur? Qeydiyyatdan keçin'
+              : mode === 'signUp'
+                ? 'Artıq hesabınız var? Daxil olun'
+                : 'Daxil ol səhifəsinə qayıt'}
           </Text>
         </Pressable>
       </ScrollView>
@@ -157,6 +193,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
     fontSize: 15,
+  },
+  forgotLink: {
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  forgotText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: '600',
   },
   switchLink: {
     marginTop: 20,

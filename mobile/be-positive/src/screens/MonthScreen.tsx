@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { MOOD_OPTIONS, type JournalEntry } from '../types'
 import { colors, MOOD_COLORS, radius } from '../theme'
 
 interface MonthScreenProps {
   entries: JournalEntry[]
+  onSelectEntry: (entry: JournalEntry) => void
 }
 
 const MONTH_NAMES = [
@@ -21,15 +22,15 @@ function moodIndex(entry: JournalEntry) {
   return MOOD_OPTIONS.findIndex((option) => option.key === entry.mood)
 }
 
-export default function MonthScreen({ entries }: MonthScreenProps) {
+export default function MonthScreen({ entries, onSelectEntry }: MonthScreenProps) {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
 
   const entryByDay = useMemo(() => {
-    const map = new Map<string, number>()
+    const map = new Map<string, JournalEntry>()
     for (const entry of entries) {
-      map.set(dayKey(entry.createdAt), moodIndex(entry))
+      map.set(dayKey(entry.createdAt), entry)
     }
     return map
   }, [entries])
@@ -39,13 +40,13 @@ export default function MonthScreen({ entries }: MonthScreenProps) {
     const totalDays = new Date(year, month + 1, 0).getDate()
     const leadingBlanks = (first.getDay() + 6) % 7
 
-    const list: (number | null)[] = Array(leadingBlanks).fill(null)
+    const list: ({ entry: JournalEntry | null } | null)[] = Array(leadingBlanks).fill(null)
     let logged = 0
     for (let day = 1; day <= totalDays; day++) {
       const iso = new Date(year, month, day).toISOString().slice(0, 10)
-      const mood = entryByDay.get(iso)
-      if (mood !== undefined) logged += 1
-      list.push(mood ?? -1)
+      const entry = entryByDay.get(iso) ?? null
+      if (entry) logged += 1
+      list.push({ entry })
     }
     return { cells: list, loggedCount: logged, daysInMonth: totalDays }
   }, [entryByDay, year, month])
@@ -71,17 +72,19 @@ export default function MonthScreen({ entries }: MonthScreenProps) {
             {d}
           </Text>
         ))}
-        {cells.map((mood, i) => (
-          <View
-            key={i}
-            style={[
-              styles.cell,
-              {
-                backgroundColor: mood === null ? 'transparent' : mood === -1 ? colors.surface : MOOD_COLORS[mood],
-              },
-            ]}
-          />
-        ))}
+        {cells.map((cell, i) => {
+          if (!cell) return <View key={i} style={[styles.cell, { backgroundColor: 'transparent' }]} />
+          const entry = cell.entry
+          const color = entry ? MOOD_COLORS[moodIndex(entry)] : colors.surface
+          return (
+            <Pressable
+              key={i}
+              disabled={!entry}
+              onPress={() => entry && onSelectEntry(entry)}
+              style={[styles.cell, { backgroundColor: color }]}
+            />
+          )
+        })}
       </View>
 
       <View style={styles.legendRow}>

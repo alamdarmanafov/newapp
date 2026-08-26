@@ -1,20 +1,39 @@
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { Linking } from 'react-native'
 import { supabase } from './supabaseClient'
+
+const RESET_REDIRECT_URL = 'bepositive://reset-password'
 
 interface AuthContextValue {
   session: Session | null
   loading: boolean
+  recovering: boolean
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<string | null>
+  updatePassword: (newPassword: string) => Promise<string | null>
+  cancelRecovery: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+function parseRecoveryTokens(url: string) {
+  const fragment = url.split('#')[1]
+  if (!fragment) return null
+  const params = new URLSearchParams(fragment)
+  const type = params.get('type')
+  const accessToken = params.get('access_token')
+  const refreshToken = params.get('refresh_token')
+  if (type !== 'recovery' || !accessToken || !refreshToken) return null
+  return { accessToken, refreshToken }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -26,7 +45,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession)
     })
 
-    return () => subscription.subscription.unsubscribe()
+    const handleUrl = async (url: string) => {
+      const tokens = parseRecoveryTokens(url)
+      if (!tokens) return
+      const { error } = await supabase.auth.setSession({
+        access_token: tokens.accessToken,
+        refresh_token: tokens.refreshToken,
+      })
+      if (!error) setRecovering(true)
+    }
+
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl(url)
+    })
+    const linkingSubscription = Linking.addEventListener('url', ({ url }) => handleUrl(url))
+
+    return () => {
+      subscription.subscription.unsubscribe()
+      linkingSubscription.remove()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -43,8 +80,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: RESET_REDIRECT_URL })
+    return error ? error.message : null
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (!error) setRecovering(false)
+    return error ? error.message : null
+  }
+
+  const cancelRecovery = () => setRecovering(false)
+
   return (
-    <AuthContext.Provider value={{ session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ session, loading, recovering, signIn, signUp, signOut, resetPassword, updatePassword, cancelRecovery }}
+    >
       {children}
     </AuthContext.Provider>
   )
