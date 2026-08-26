@@ -13,6 +13,7 @@ export const DAILY_CHAT_MESSAGE_LIMIT = 3
 // Credentials). These are public identifiers, not secrets. TODO: replace the
 // placeholders once the credentials exist.
 export const GOOGLE_IOS_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? 'REPLACE_WITH_GOOGLE_IOS_CLIENT_ID'
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ??
+  '360468046824-1dp6cc53joq20l1tsh47fabk56eujb3t.apps.googleusercontent.com'
 export const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? 'REPLACE_WITH_GOOGLE_WEB_CLIENT_ID'
