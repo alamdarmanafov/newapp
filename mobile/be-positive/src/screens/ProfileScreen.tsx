@@ -127,11 +127,11 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         </View>
       </View>
 
-      <InsightsSection entries={entries} placeStats={placeStats} />
+      <AchievementsSection entries={entries} placeStats={placeStats} />
 
       <View style={styles.sectionDivider} />
 
-      <AchievementsSection entries={entries} placeStats={placeStats} />
+      <InsightsSection entries={entries} placeStats={placeStats} />
 
       <View style={styles.settingsGroup}>
         <View style={styles.settingRow}>
