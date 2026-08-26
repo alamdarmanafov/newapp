@@ -2,15 +2,16 @@ import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { ACHIEVEMENT_DEFS, MOOD_ORDER, timeOfDayBucketForHour, type AchievementDef } from '../i18n/content'
+import { ACHIEVEMENT_DEFS, type AchievementDef } from '../i18n/content'
 import type { MyPlaceCategoryStat } from '../places'
-import { computeStreak, dayKey } from '../storage'
+import { computeAchievementValues, computeTimeOfDayCounts, isAchievementUnlocked } from '../achievements'
 import { colors, radius, shadow } from '../theme'
 import type { TranslationKey } from '../i18n/translations'
 
 interface AchievementsSectionProps {
   entries: JournalEntry[]
   placeStats: MyPlaceCategoryStat[]
+  showHeader?: boolean
 }
 
 const METRIC_KEY: Record<AchievementDef['metric'], TranslationKey> = {
@@ -23,57 +24,25 @@ const METRIC_KEY: Record<AchievementDef['metric'], TranslationKey> = {
   placeCategories: 'achievements.metricPlaceCategories',
 }
 
-function moodIndex(entry: JournalEntry) {
-  return MOOD_ORDER.indexOf(entry.mood)
-}
-
-function isUnlocked(
-  achievement: AchievementDef,
-  values: { entries: number; streak: number; places: number; factors: number; goodDays: number; placeCategories: number },
-  timeOfDayCounts: Map<string, number>
-): boolean {
-  if (achievement.metric === 'timeOfDay') {
-    return (timeOfDayCounts.get(achievement.bucket ?? '') ?? 0) >= achievement.threshold
-  }
-  return values[achievement.metric] >= achievement.threshold
-}
-
-export default function AchievementsSection({ entries, placeStats }: AchievementsSectionProps) {
+export default function AchievementsSection({ entries, placeStats, showHeader = true }: AchievementsSectionProps) {
   const { t, locale } = useLocale()
 
-  const values = useMemo(() => {
-    const streak = computeStreak(entries)
-    const places = placeStats.reduce((sum, s) => sum + s.count, 0)
-    const factors = new Set(entries.flatMap((e) => e.factors ?? [])).size
-    const goodDays = new Set(
-      entries.filter((e) => moodIndex(e) >= 3).map((e) => dayKey(e.createdAt))
-    ).size
-    const placeCategories = placeStats.length
-    return { entries: entries.length, streak, places, factors, goodDays, placeCategories }
-  }, [entries, placeStats])
+  const values = useMemo(() => computeAchievementValues(entries, placeStats), [entries, placeStats])
+  const timeOfDayCounts = useMemo(() => computeTimeOfDayCounts(entries), [entries])
 
-  const timeOfDayCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const entry of entries) {
-      const bucket = timeOfDayBucketForHour(new Date(entry.createdAt).getHours())
-      counts.set(bucket.id, (counts.get(bucket.id) ?? 0) + 1)
-    }
-    return counts
-  }, [entries])
-
-  const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => isUnlocked(a, values, timeOfDayCounts)).length
+  const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => isAchievementUnlocked(a, values, timeOfDayCounts)).length
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.sectionTitle}>{t('achievements.title')}</Text>
-      <Text style={styles.sectionSubtitle}>{t('achievements.subtitle')}</Text>
+    <View style={[styles.root, !showHeader && styles.rootCompact]}>
+      {showHeader && <Text style={styles.sectionTitle}>{t('achievements.title')}</Text>}
+      {showHeader && <Text style={styles.sectionSubtitle}>{t('achievements.subtitle')}</Text>}
       <Text style={styles.unlockedCount}>
         {t('achievements.unlockedCount', { unlocked: unlockedCount, total: ACHIEVEMENT_DEFS.length })}
       </Text>
 
       <View style={styles.grid}>
         {ACHIEVEMENT_DEFS.map((achievement) => {
-          const unlocked = isUnlocked(achievement, values, timeOfDayCounts)
+          const unlocked = isAchievementUnlocked(achievement, values, timeOfDayCounts)
           return (
             <View key={achievement.id} style={styles.tile}>
               <View style={[styles.badge, unlocked ? styles.badgeUnlocked : styles.badgeLocked]}>
@@ -104,6 +73,9 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     marginTop: 20,
+  },
+  rootCompact: {
+    marginTop: 0,
   },
   sectionTitle: {
     fontSize: 17,

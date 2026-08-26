@@ -5,10 +5,12 @@ import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
 import { FUNCTIONS_BASE_URL } from '../config'
 import { LOCALE_OPTIONS } from '../i18n/content'
-import AchievementsSection from '../components/AchievementsSection'
+import AchievementsModal from '../components/AchievementsModal'
 import InsightsSection from '../components/InsightsSection'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
+import { countUnlockedAchievements } from '../achievements'
+import { ACHIEVEMENT_DEFS } from '../i18n/content'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
 import { cancelWeeklyRecap, scheduleWeeklyRecap } from '../weeklyRecap'
@@ -30,9 +32,11 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   const [remindersOn, setRemindersOn] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+  const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
+  const unlockedAchievements = countUnlockedAchievements(entries, placeStats)
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
 
   useEffect(() => {
@@ -127,13 +131,19 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         </View>
       </View>
 
-      <AchievementsSection entries={entries} placeStats={placeStats} />
-
-      <View style={styles.sectionDivider} />
-
       <InsightsSection entries={entries} placeStats={placeStats} />
 
       <View style={styles.settingsGroup}>
+        <Pressable style={styles.settingRow} onPress={() => setAchievementsModalOpen(true)}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('achievements.title')}</Text>
+            <Text style={styles.settingHint}>
+              {t('achievements.unlockedCount', { unlocked: unlockedAchievements, total: ACHIEVEMENT_DEFS.length })}
+            </Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingLabel}>{t('profile.remindersLabel')}</Text>
@@ -192,6 +202,12 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
 
       <LanguagePickerModal visible={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
       <PasswordModal visible={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
+      <AchievementsModal
+        visible={achievementsModalOpen}
+        onClose={() => setAchievementsModalOpen(false)}
+        entries={entries}
+        placeStats={placeStats}
+      />
     </ScrollView>
   )
 }
@@ -241,12 +257,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 32,
     width: '100%',
-  },
-  sectionDivider: {
-    width: '100%',
-    height: 1,
-    backgroundColor: colors.border,
-    marginTop: 32,
   },
   statCard: {
     flex: 1,
