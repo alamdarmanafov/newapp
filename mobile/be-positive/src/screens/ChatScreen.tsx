@@ -124,7 +124,7 @@ export default function ChatScreen() {
       <ScrollView
         ref={scrollRef}
         style={styles.conversation}
-        contentContainerStyle={styles.conversationContent}
+        contentContainerStyle={[styles.conversationContent, !sentMessage && !loading && styles.conversationContentCentered]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
@@ -254,13 +254,13 @@ const styles = StyleSheet.create({
   conversationContent: {
     padding: 20,
     paddingBottom: 12,
+  },
+  conversationContentCentered: {
     flexGrow: 1,
+    justifyContent: 'center',
   },
   emptyState: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 40,
   },
   emptyEmoji: {
     fontSize: 40,
