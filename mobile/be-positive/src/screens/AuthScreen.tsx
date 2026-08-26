@@ -67,6 +67,13 @@ export default function AuthScreen() {
     }
     if (result.needsConfirmation) {
       setInfo(t('auth.infoConfirmEmail'))
+      // Some Supabase projects still report needsConfirmation right after
+      // signUp even though the account is already usable (e.g. email
+      // confirmation was just disabled and hasn't fully propagated). Retry
+      // signing in automatically once so the user isn't stuck on this screen.
+      setTimeout(() => {
+        signIn(email.trim(), password)
+      }, 5000)
     }
     // Otherwise a session was created immediately and Root() will switch to MainApp.
   }
