@@ -5,6 +5,7 @@ import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
 import { FUNCTIONS_BASE_URL } from '../config'
 import { LOCALE_OPTIONS } from '../i18n/content'
+import InsightsSection from '../components/InsightsSection'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
@@ -114,6 +115,8 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
           <Text style={styles.statLabel}>{t('profile.entriesLabel')}</Text>
         </View>
       </View>
+
+      <InsightsSection entries={entries} />
 
       <View style={styles.settingsGroup}>
         <View style={styles.settingRow}>

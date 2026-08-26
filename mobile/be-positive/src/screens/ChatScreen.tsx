@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Dimensions,
   Keyboard,
   Platform,
   Pressable,
@@ -35,6 +36,8 @@ export default function ChatScreen() {
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const [reservedBelow, setReservedBelow] = useState(0)
+  const rootRef = useRef<View>(null)
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow'
@@ -48,6 +51,18 @@ export default function ChatScreen() {
       hideSub.remove()
     }
   }, [])
+
+  // The tab bar (and the safe-area bottom inset) sit below this screen and
+  // are already reserved space — only the keyboard height beyond that needs
+  // to be added, or the input row overshoots above the keyboard.
+  const handleRootLayout = () => {
+    rootRef.current?.measureInWindow((_x, y, _width, height) => {
+      const screenHeight = Dimensions.get('window').height
+      setReservedBelow(Math.max(0, screenHeight - (y + height)))
+    })
+  }
+
+  const extraKeyboardMargin = Math.max(0, keyboardHeight - reservedBelow)
 
   const loadUsage = useCallback(async () => {
     if (!userId) return
@@ -113,7 +128,7 @@ export default function ChatScreen() {
   const canType = remaining !== null && remaining > 0 && !loading
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} ref={rootRef} onLayout={handleRootLayout}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.avatarWrap}>
@@ -183,7 +198,7 @@ export default function ChatScreen() {
         {error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
 
-      <View style={[styles.inputRow, keyboardHeight > 0 && { marginBottom: keyboardHeight }]}>
+      <View style={[styles.inputRow, extraKeyboardMargin > 0 && { marginBottom: extraKeyboardMargin }]}>
         <TextInput
           style={styles.input}
           placeholder={t('chat.placeholder')}

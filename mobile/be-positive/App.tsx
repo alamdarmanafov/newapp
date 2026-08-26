@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar'
 
 import TabBar, { type TabKey } from './src/components/TabBar'
 import TodayScreen from './src/screens/TodayScreen'
-import InsightsScreen from './src/screens/InsightsScreen'
 import MonthScreen from './src/screens/MonthScreen'
 import ChatScreen from './src/screens/ChatScreen'
 import PlacesScreen from './src/screens/PlacesScreen'
@@ -26,7 +25,7 @@ interface MainAppProps {
 }
 
 function MainApp({ userId }: MainAppProps) {
-  const [tab, setTab] = useState<TabKey>('insights')
+  const [tab, setTab] = useState<TabKey>('chat')
   const [showToday, setShowToday] = useState(true)
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -87,7 +86,6 @@ function MainApp({ userId }: MainAppProps) {
     <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
-          {tab === 'insights' && <InsightsScreen entries={entries} onRefresh={handleRefreshEntries} />}
           {tab === 'chat' && <ChatScreen />}
           {tab === 'month' && <MonthScreen entries={entries} onSelectEntry={setSelectedEntry} onRefresh={handleRefreshEntries} />}
           {tab === 'places' && <PlacesScreen />}

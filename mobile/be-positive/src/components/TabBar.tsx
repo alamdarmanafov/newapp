@@ -3,7 +3,7 @@ import { useLocale } from '../i18n/LocaleContext'
 import type { TranslationKey } from '../i18n/translations'
 import { colors } from '../theme'
 
-export type TabKey = 'insights' | 'chat' | 'month' | 'places' | 'profile'
+export type TabKey = 'chat' | 'month' | 'places' | 'profile'
 
 interface TabBarProps {
   tab: TabKey
@@ -11,7 +11,6 @@ interface TabBarProps {
 }
 
 const TABS: { key: TabKey; labelKey: TranslationKey; icon: string }[] = [
-  { key: 'insights', labelKey: 'tabs.insights', icon: '📊' },
   { key: 'chat', labelKey: 'tabs.chat', icon: '✨' },
   { key: 'month', labelKey: 'tabs.month', icon: '📅' },
   { key: 'places', labelKey: 'tabs.places', icon: '🗺️' },
