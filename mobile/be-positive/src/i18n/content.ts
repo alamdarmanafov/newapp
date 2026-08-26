@@ -114,8 +114,10 @@ export interface AchievementDef {
   emoji: string
   az: string
   en: string
-  metric: 'entries' | 'streak' | 'places' | 'factors' | 'goodDays'
+  metric: 'entries' | 'streak' | 'places' | 'factors' | 'goodDays' | 'timeOfDay' | 'placeCategories'
   threshold: number
+  // Only used by the 'timeOfDay' metric — which TIME_OF_DAY_BUCKETS id to count entries in.
+  bucket?: string
 }
 
 // Ordered lightest-to-hardest within each metric group so the UI can show
@@ -132,6 +134,9 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: 'positive_90', emoji: '☀️', az: 'Pozitiv 90 gün', en: '90 positive days', metric: 'goodDays', threshold: 90 },
   { id: 'positive_180', emoji: '🌟', az: 'Pozitiv 180 gün', en: '180 positive days', metric: 'goodDays', threshold: 180 },
   { id: 'positive_365', emoji: '🏆', az: 'Pozitiv 365 gün', en: '365 positive days', metric: 'goodDays', threshold: 365 },
+  { id: 'early_bird', emoji: '🌅', az: 'Erkən quş', en: 'Early bird', metric: 'timeOfDay', bucket: 'morning', threshold: 10 },
+  { id: 'night_owl', emoji: '🦉', az: 'Gecə bayquşu', en: 'Night owl', metric: 'timeOfDay', bucket: 'night', threshold: 10 },
+  { id: 'category_master', emoji: '🧭', az: 'Kateqoriya ustası', en: 'Category master', metric: 'placeCategories', threshold: 6 },
 ]
 
 export function achievementLabel(id: string, locale: Locale): string {

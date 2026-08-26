@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
-import { ACHIEVEMENT_DEFS, MOOD_ORDER, type AchievementDef } from '../i18n/content'
+import { ACHIEVEMENT_DEFS, MOOD_ORDER, timeOfDayBucketForHour, type AchievementDef } from '../i18n/content'
 import type { MyPlaceCategoryStat } from '../places'
 import { computeStreak, dayKey } from '../storage'
 import { colors, radius, shadow } from '../theme'
@@ -19,10 +19,23 @@ const METRIC_KEY: Record<AchievementDef['metric'], TranslationKey> = {
   places: 'achievements.metricPlaces',
   factors: 'achievements.metricFactors',
   goodDays: 'achievements.metricGoodDays',
+  timeOfDay: 'achievements.metricTimeOfDay',
+  placeCategories: 'achievements.metricPlaceCategories',
 }
 
 function moodIndex(entry: JournalEntry) {
   return MOOD_ORDER.indexOf(entry.mood)
+}
+
+function isUnlocked(
+  achievement: AchievementDef,
+  values: { entries: number; streak: number; places: number; factors: number; goodDays: number; placeCategories: number },
+  timeOfDayCounts: Map<string, number>
+): boolean {
+  if (achievement.metric === 'timeOfDay') {
+    return (timeOfDayCounts.get(achievement.bucket ?? '') ?? 0) >= achievement.threshold
+  }
+  return values[achievement.metric] >= achievement.threshold
 }
 
 export default function AchievementsSection({ entries, placeStats }: AchievementsSectionProps) {
@@ -35,10 +48,20 @@ export default function AchievementsSection({ entries, placeStats }: Achievement
     const goodDays = new Set(
       entries.filter((e) => moodIndex(e) >= 3).map((e) => dayKey(e.createdAt))
     ).size
-    return { entries: entries.length, streak, places, factors, goodDays }
+    const placeCategories = placeStats.length
+    return { entries: entries.length, streak, places, factors, goodDays, placeCategories }
   }, [entries, placeStats])
 
-  const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => values[a.metric] >= a.threshold).length
+  const timeOfDayCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const entry of entries) {
+      const bucket = timeOfDayBucketForHour(new Date(entry.createdAt).getHours())
+      counts.set(bucket.id, (counts.get(bucket.id) ?? 0) + 1)
+    }
+    return counts
+  }, [entries])
+
+  const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => isUnlocked(a, values, timeOfDayCounts)).length
 
   return (
     <View style={styles.root}>
@@ -50,7 +73,7 @@ export default function AchievementsSection({ entries, placeStats }: Achievement
 
       <View style={styles.grid}>
         {ACHIEVEMENT_DEFS.map((achievement) => {
-          const unlocked = values[achievement.metric] >= achievement.threshold
+          const unlocked = isUnlocked(achievement, values, timeOfDayCounts)
           return (
             <View key={achievement.id} style={styles.tile}>
               <View style={[styles.badge, unlocked ? styles.badgeUnlocked : styles.badgeLocked]}>
