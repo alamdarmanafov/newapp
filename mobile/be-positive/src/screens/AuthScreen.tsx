@@ -47,17 +47,24 @@ export default function AuthScreen() {
       return
     }
     setLoading(true)
-    const message =
-      mode === 'signIn' ? await signIn(email.trim(), password) : await signUp(email.trim(), password)
-    setLoading(false)
 
-    if (message) {
-      setError(message)
+    if (mode === 'signIn') {
+      const message = await signIn(email.trim(), password)
+      setLoading(false)
+      if (message) setError(message)
       return
     }
-    if (mode === 'signUp') {
-      setInfo('Qeydiyyat uğurlu oldu! Email-inizi yoxlayın (təsdiq linki göndərilə bilər).')
+
+    const result = await signUp(email.trim(), password)
+    setLoading(false)
+    if (result.error) {
+      setError(result.error)
+      return
     }
+    if (result.needsConfirmation) {
+      setInfo('Qeydiyyat uğurlu oldu! Email-inizi yoxlayın (təsdiq linki göndərilib).')
+    }
+    // Otherwise a session was created immediately and Root() will switch to MainApp.
   }
 
   return (
