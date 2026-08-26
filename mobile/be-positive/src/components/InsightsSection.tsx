@@ -92,20 +92,6 @@ export default function InsightsSection({ entries, userId }: InsightsSectionProp
     return { factor: best.factor, days: best.total, diff }
   }, [entries])
 
-  const topFactor = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const entry of entries) {
-      for (const factor of entry.factors ?? []) {
-        counts.set(factor, (counts.get(factor) ?? 0) + 1)
-      }
-    }
-    let best: { factor: string; count: number } | null = null
-    for (const [factor, count] of counts) {
-      if (!best || count > best.count) best = { factor, count }
-    }
-    return best
-  }, [entries])
-
   const bestDaysStats = useMemo(() => {
     const now = new Date()
     const startOfWeek = startOfDay(now)
@@ -143,6 +129,37 @@ export default function InsightsSection({ entries, userId }: InsightsSectionProp
   }, [entries])
 
   const bestPlace = placeStats[0] ?? null
+
+  const monthlyComparison = useMemo(() => {
+    const now = new Date()
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+    const thisMonthEntries = entries.filter((e) => new Date(e.createdAt) >= startOfThisMonth)
+    const lastMonthEntries = entries.filter(
+      (e) => new Date(e.createdAt) >= startOfLastMonth && new Date(e.createdAt) < startOfThisMonth
+    )
+    if (thisMonthEntries.length === 0 || lastMonthEntries.length === 0) return null
+
+    const avg = (list: JournalEntry[]) => list.reduce((sum, e) => sum + moodIndex(e), 0) / list.length
+    const current = avg(thisMonthEntries) + 1
+    const previous = avg(lastMonthEntries) + 1
+    return { current, previous, diff: current - previous }
+  }, [entries])
+
+  const factorRanking = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const entry of entries) {
+      for (const factor of entry.factors ?? []) {
+        counts.set(factor, (counts.get(factor) ?? 0) + 1)
+      }
+    }
+    const ranked = Array.from(counts.entries())
+      .map(([factor, count]) => ({ factor, count }))
+      .sort((a, b) => b.count - a.count)
+    const maxCount = ranked[0]?.count ?? 1
+    return ranked.map((r) => ({ ...r, ratio: r.count / maxCount }))
+  }, [entries])
 
   const points = week.map((d, i) => ({
     x: 26 + i * 34,
@@ -214,17 +231,54 @@ export default function InsightsSection({ entries, userId }: InsightsSectionProp
         </View>
       )}
 
-      {topFactor && (
-        <View style={styles.rowCard}>
-          <View style={styles.rowIconWrap}>
-            <Text style={styles.rowIcon}>{factorEmoji(topFactor.factor)}</Text>
-          </View>
-          <View>
-            <Text style={styles.rowLabel}>{t('insights.topFactorLabel')}</Text>
-            <Text style={styles.rowValue}>
-              {factorLabel(topFactor.factor, locale)} · {topFactor.count} {t('insights.topFactorDaysSuffix')}
-            </Text>
-          </View>
+      {monthlyComparison &&
+        (() => {
+          const { diff } = monthlyComparison
+          const isBetter = diff > 0.05
+          const isWorse = diff < -0.05
+          const label = isBetter
+            ? t('insights.monthCompareBetter', { diff: `+${diff.toFixed(1)}` })
+            : isWorse
+              ? t('insights.monthCompareWorse', { diff: diff.toFixed(1) })
+              : t('insights.monthCompareEqual')
+          return (
+            <View style={[styles.compareCard, isBetter && styles.compareCardUp, isWorse && styles.compareCardDown]}>
+              <View style={styles.compareIconWrap}>
+                <Text style={styles.rowIcon}>📅</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.compareText}>{label}</Text>
+                <Text style={styles.compareSub}>
+                  {t('insights.monthCompareSub', {
+                    current: monthlyComparison.current.toFixed(1),
+                    previous: monthlyComparison.previous.toFixed(1),
+                  })}
+                </Text>
+              </View>
+            </View>
+          )
+        })()}
+
+      {factorRanking.length > 0 && (
+        <View style={styles.rankCard}>
+          <Text style={styles.rankTitle}>{t('insights.factorRankingTitle')}</Text>
+          {factorRanking.map((item, index) => (
+            <View key={item.factor} style={[styles.rankRow, index > 0 && styles.rankRowSpacing]}>
+              <View style={styles.rankNum}>
+                <Text style={styles.rankNumText}>{index + 1}</Text>
+              </View>
+              <Text style={styles.rankEmoji}>{factorEmoji(item.factor)}</Text>
+              <Text style={styles.rankName} numberOfLines={1}>
+                {factorLabel(item.factor, locale)}
+              </Text>
+              <View style={styles.rankBarTrack}>
+                <View style={[styles.rankBarFill, { width: `${Math.max(item.ratio * 100, 6)}%` }]} />
+              </View>
+              <Text style={styles.rankMeta}>
+                {item.count} {t('insights.topFactorDaysSuffix')}
+              </Text>
+            </View>
+          ))}
         </View>
       )}
 
@@ -419,6 +473,110 @@ const styles = StyleSheet.create({
     fontSize: 15.5,
     fontWeight: '700',
     color: colors.text,
+  },
+  compareCard: {
+    marginTop: 14,
+    padding: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  compareCardUp: {
+    backgroundColor: '#EAF8EF',
+    borderColor: '#CDEEDA',
+  },
+  compareCardDown: {
+    backgroundColor: '#FBEDED',
+    borderColor: '#F4D3D3',
+  },
+  compareIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compareText: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: colors.text,
+    lineHeight: 20,
+  },
+  compareSub: {
+    marginTop: 3,
+    fontSize: 11.5,
+    color: colors.muted,
+    fontWeight: '500',
+  },
+  rankCard: {
+    marginTop: 14,
+    padding: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  rankTitle: {
+    fontSize: 12.5,
+    color: colors.muted,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  rankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  rankRowSpacing: {
+    marginTop: 12,
+  },
+  rankNum: {
+    width: 20,
+    height: 20,
+    borderRadius: 7,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankNumText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  rankEmoji: {
+    fontSize: 16,
+    width: 20,
+    textAlign: 'center',
+  },
+  rankName: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: colors.text,
+    flex: 1,
+  },
+  rankBarTrack: {
+    flex: 1.4,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.primarySoft,
+    overflow: 'hidden',
+  },
+  rankBarFill: {
+    height: '100%',
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  rankMeta: {
+    fontSize: 11,
+    color: colors.muted,
+    fontWeight: '600',
+    width: 44,
+    textAlign: 'right',
   },
   empty: {
     marginTop: 20,
