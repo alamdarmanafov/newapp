@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
+import Constants from 'expo-constants'
 import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
 import { LOCALE_OPTIONS } from '../i18n/content'
@@ -12,13 +13,16 @@ interface ProfileScreenProps {
   entries: JournalEntry[]
 }
 
+const appVersion = Constants.expoConfig?.version ?? '1.0.0'
+
 export default function ProfileScreen({ entries }: ProfileScreenProps) {
-  const { session, signOut } = useAuth()
+  const { session, signOut, deleteAccount } = useAuth()
   const { t, locale } = useLocale()
   const userId = session?.user.id
   const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
   const [remindersOn, setRemindersOn] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
 
   useEffect(() => {
@@ -36,6 +40,25 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
         year: 'numeric',
       })
     : '—'
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(t('profile.deleteAccountConfirmTitle'), t('profile.deleteAccountConfirmBody'), [
+      { text: t('profile.deleteAccountCancel'), style: 'cancel' },
+      {
+        text: t('profile.deleteAccountConfirmButton'),
+        style: 'destructive',
+        onPress: async () => {
+          setDeleting(true)
+          try {
+            await deleteAccount()
+          } catch {
+            setDeleting(false)
+            Alert.alert(t('profile.deleteAccountError'))
+          }
+        },
+      },
+    ])
+  }
 
   const toggleReminders = async (value: boolean) => {
     if (!userId) return
@@ -95,6 +118,18 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
       <Pressable style={styles.signOutButton} onPress={signOut}>
         <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
       </Pressable>
+
+      <Pressable style={styles.deleteAccountButton} onPress={confirmDeleteAccount} disabled={deleting}>
+        {deleting ? (
+          <ActivityIndicator color={colors.muted} size="small" />
+        ) : (
+          <Text style={styles.deleteAccountText}>{t('profile.deleteAccount')}</Text>
+        )}
+      </Pressable>
+
+      <Text style={styles.versionText}>
+        {t('profile.version')} {appVersion}
+      </Text>
 
       <LanguagePickerModal visible={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
     </View>
@@ -197,7 +232,6 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     marginTop: 'auto',
-    marginBottom: 20,
     paddingVertical: 16,
     paddingHorizontal: 40,
     borderRadius: radius.lg,
@@ -208,5 +242,26 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontWeight: '700',
     fontSize: 15,
+  },
+  deleteAccountButton: {
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    minHeight: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteAccountText: {
+    color: colors.muted,
+    fontWeight: '600',
+    fontSize: 13.5,
+    textDecorationLine: 'underline',
+  },
+  versionText: {
+    marginTop: 6,
+    marginBottom: 12,
+    fontSize: 12,
+    color: colors.muted,
+    opacity: 0.7,
   },
 })

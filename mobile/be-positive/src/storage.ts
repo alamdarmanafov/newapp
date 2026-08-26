@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { JournalEntry } from './types'
 
-const ENTRIES_KEY = 'be-positive/entries'
+export const ENTRIES_KEY = 'be-positive/entries'
 
 export async function loadEntries(): Promise<JournalEntry[]> {
   try {
