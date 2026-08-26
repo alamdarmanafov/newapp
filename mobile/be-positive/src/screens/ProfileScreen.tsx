@@ -51,10 +51,6 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.languageRow}>
-        <LanguageSwitcher />
-      </View>
-
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{(name || session?.user.email || '?').charAt(0).toUpperCase()}</Text>
       </View>
@@ -85,6 +81,13 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
         />
       </View>
 
+      <View style={styles.settingRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.settingLabel}>{t('profile.language')}</Text>
+        </View>
+        <LanguageSwitcher />
+      </View>
+
       <Pressable style={styles.signOutButton} onPress={signOut}>
         <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
       </Pressable>
@@ -98,11 +101,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 28,
     paddingTop: 48,
-  },
-  languageRow: {
-    position: 'absolute',
-    top: 60,
-    right: 28,
   },
   avatar: {
     width: 108,

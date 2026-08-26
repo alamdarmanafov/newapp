@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -24,9 +24,11 @@ export default function ChatScreen() {
   const { session } = useAuth()
   const { t, locale } = useLocale()
   const userId = session?.user.id
+  const scrollRef = useRef<ScrollView>(null)
 
   const [usedToday, setUsedToday] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [sentMessage, setSentMessage] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,9 +52,12 @@ export default function ChatScreen() {
 
   const handleSend = async () => {
     if (!userId || !message.trim() || remaining === null || remaining <= 0) return
+    const outgoing = message.trim()
     setLoading(true)
     setError(null)
     setReply(null)
+    setSentMessage(outgoing)
+    setMessage('')
 
     try {
       const nextCount = (usedToday ?? 0) + 1
@@ -69,58 +74,109 @@ export default function ChatScreen() {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ message: message.trim(), language: locale }),
+        body: JSON.stringify({ message: outgoing, language: locale }),
       })
       if (!response.ok) throw new Error('AI cavab vermədi')
       const data = (await response.json()) as { message?: string }
-      setReply(data.message ?? 'Cavab alınmadı, bir az sonra yenidən cəhd edin.')
-      setMessage('')
+      setReply(data.message ?? null)
     } catch {
       setError(t('chat.error'))
     } finally {
       setLoading(false)
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
     }
   }
 
+  const limitReached = remaining !== null && remaining <= 0
+  const canType = remaining !== null && remaining > 0 && !loading
+
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{t('chat.title')}</Text>
-        <Text style={styles.subtitle}>
-          {remaining === null ? t('chat.loading') : remaining > 0 ? t('chat.remaining', { count: remaining }) : t('chat.limitReached')}
-        </Text>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <View style={styles.avatarWrap}>
+            <Text style={styles.avatarEmoji}>✨</Text>
+          </View>
+          <View>
+            <Text style={styles.title}>{t('chat.title')}</Text>
+            <Text style={styles.subtitle}>
+              {remaining === null ? t('chat.loading') : limitReached ? t('chat.limitReached') : t('chat.remaining', { count: remaining })}
+            </Text>
+          </View>
+        </View>
+        {remaining !== null && (
+          <View style={[styles.remainingBadge, limitReached && styles.remainingBadgeEmpty]}>
+            <Text style={[styles.remainingBadgeText, limitReached && styles.remainingBadgeTextEmpty]}>
+              {remaining}/{DAILY_CHAT_MESSAGE_LIMIT}
+            </Text>
+          </View>
+        )}
+      </View>
 
+      <ScrollView
+        ref={scrollRef}
+        style={styles.conversation}
+        contentContainerStyle={styles.conversationContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        {!sentMessage && !loading && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>💬</Text>
+            <Text style={styles.emptyText}>{t('chat.emptyState')}</Text>
+          </View>
+        )}
+
+        {sentMessage && (
+          <View style={styles.userBubbleRow}>
+            <View style={styles.userBubble}>
+              <Text style={styles.userBubbleText}>{sentMessage}</Text>
+            </View>
+          </View>
+        )}
+
+        {loading && (
+          <View style={styles.aiBubbleRow}>
+            <View style={styles.aiAvatar}>
+              <Text style={styles.aiAvatarEmoji}>✨</Text>
+            </View>
+            <View style={[styles.aiBubble, styles.aiBubbleLoading]}>
+              <ActivityIndicator color={colors.primary} size="small" />
+            </View>
+          </View>
+        )}
+
+        {!loading && reply && (
+          <View style={styles.aiBubbleRow}>
+            <View style={styles.aiAvatar}>
+              <Text style={styles.aiAvatarEmoji}>✨</Text>
+            </View>
+            <View style={styles.aiBubble}>
+              <Text style={styles.aiBubbleText}>{reply}</Text>
+            </View>
+          </View>
+        )}
+
+        {error && <Text style={styles.error}>{error}</Text>}
+      </ScrollView>
+
+      <View style={styles.inputRow}>
         <TextInput
-          style={styles.textArea}
+          style={styles.input}
           placeholder={t('chat.placeholder')}
           placeholderTextColor={colors.muted}
           multiline
-          numberOfLines={4}
           value={message}
           onChangeText={setMessage}
-          editable={remaining !== null && remaining > 0 && !loading}
+          editable={canType}
         />
-
-        {error && <Text style={styles.error}>{error}</Text>}
-
         <Pressable
-          style={[
-            styles.primaryButton,
-            (!message.trim() || loading || !remaining) && styles.primaryButtonDisabled,
-          ]}
+          style={[styles.sendButton, (!message.trim() || !canType) && styles.sendButtonDisabled]}
           onPress={handleSend}
-          disabled={!message.trim() || loading || !remaining}
+          disabled={!message.trim() || !canType}
         >
-          {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>{t('chat.send')}</Text>}
+          <Text style={styles.sendButtonIcon}>➤</Text>
         </Pressable>
-
-        {reply && (
-          <View style={styles.replyCard}>
-            <Text style={styles.replyLabel}>{t('chat.replyLabel')}</Text>
-            <Text style={styles.replyText}>{reply}</Text>
-          </View>
-        )}
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   )
 }
@@ -129,71 +185,177 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadow.soft,
+  },
+  avatarEmoji: {
+    fontSize: 19,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.text,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.muted,
-    marginTop: 4,
-    marginBottom: 16,
+    marginTop: 2,
   },
-  textArea: {
+  remainingBadge: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
+  },
+  remainingBadgeEmpty: {
+    backgroundColor: colors.surface,
+  },
+  remainingBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  remainingBadgeTextEmpty: {
+    color: colors.muted,
+  },
+  conversation: {
+    flex: 1,
+  },
+  conversationContent: {
+    padding: 20,
+    paddingBottom: 12,
+    flexGrow: 1,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 40,
+  },
+  emptyEmoji: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 13.5,
+    color: colors.muted,
+    textAlign: 'center',
+    maxWidth: 240,
+    lineHeight: 19,
+  },
+  userBubbleRow: {
+    alignItems: 'flex-end',
+    marginBottom: 14,
+  },
+  userBubble: {
+    maxWidth: '82%',
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
+    borderBottomRightRadius: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    ...shadow.soft,
+  },
+  userBubbleText: {
+    color: '#ffffff',
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  aiBubbleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  aiAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiAvatarEmoji: {
+    fontSize: 13,
+  },
+  aiBubble: {
+    maxWidth: '78%',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 14,
-    fontSize: 14,
+    borderRadius: radius.xl,
+    borderBottomLeftRadius: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  aiBubbleLoading: {
+    paddingVertical: 14,
+  },
+  aiBubbleText: {
     color: colors.text,
-    backgroundColor: colors.surface,
-    minHeight: 100,
-    textAlignVertical: 'top',
+    fontSize: 15,
+    lineHeight: 21,
   },
   error: {
     color: colors.danger,
     fontSize: 13,
     marginTop: 10,
   },
-  primaryButton: {
-    marginTop: 16,
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    maxHeight: 100,
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 15,
     alignItems: 'center',
+    justifyContent: 'center',
     ...shadow.soft,
   },
-  primaryButtonDisabled: {
+  sendButtonDisabled: {
     opacity: 0.4,
   },
-  primaryButtonText: {
+  sendButtonIcon: {
     color: '#ffffff',
+    fontSize: 17,
     fontWeight: '700',
-    fontSize: 15,
-  },
-  replyCard: {
-    marginTop: 20,
-    backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    padding: 20,
-    ...shadow.card,
-  },
-  replyLabel: {
-    color: colors.accent,
-    fontWeight: '700',
-    fontSize: 13,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  replyText: {
-    color: '#ffffff',
-    fontSize: 16,
-    lineHeight: 23,
   },
 })
