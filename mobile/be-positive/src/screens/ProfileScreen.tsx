@@ -7,6 +7,7 @@ import { LOCALE_OPTIONS } from '../i18n/content'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
+import { cancelWeeklyRecap, scheduleWeeklyRecap } from '../weeklyRecap'
 import { colors, radius, shadow } from '../theme'
 import type { JournalEntry } from '../types'
 
@@ -42,6 +43,10 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   useEffect(() => {
     if (userId && remindersOn) updatePushTokenLanguage(userId, locale)
   }, [locale, userId, remindersOn])
+
+  useEffect(() => {
+    if (remindersOn) scheduleWeeklyRecap(entries, locale)
+  }, [remindersOn, entries, locale])
 
   const memberSince = session?.user.created_at
     ? new Date(session.user.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'az-AZ', {
@@ -81,6 +86,7 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
       setRemindersOn(true)
     } else {
       await disableDailyReminders(userId)
+      await cancelWeeklyRecap()
       setRemindersOn(false)
     }
   }
