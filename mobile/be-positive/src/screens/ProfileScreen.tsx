@@ -11,26 +11,28 @@ interface ProfileScreenProps {
 
 export default function ProfileScreen({ entries }: ProfileScreenProps) {
   const { session, signOut } = useAuth()
+  const userId = session?.user.id
   const [remindersOn, setRemindersOn] = useState(false)
 
   useEffect(() => {
-    areNotificationsEnabled().then(setRemindersOn)
-  }, [])
+    if (userId) areNotificationsEnabled(userId).then(setRemindersOn)
+  }, [userId])
 
   const memberSince = session?.user.created_at
     ? new Date(session.user.created_at).toLocaleDateString('az-AZ', { day: '2-digit', month: 'long', year: 'numeric' })
     : '—'
 
   const toggleReminders = async (value: boolean) => {
+    if (!userId) return
     if (value) {
-      const granted = await enableDailyReminders()
+      const granted = await enableDailyReminders(userId)
       if (!granted) {
         Alert.alert('İcazə verilmədi', 'Bildirişləri aktivləşdirmək üçün telefon ayarlarından icazə ver.')
         return
       }
       setRemindersOn(true)
     } else {
-      await disableDailyReminders()
+      await disableDailyReminders(userId)
       setRemindersOn(false)
     }
   }
@@ -54,7 +56,7 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
       <View style={styles.settingRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.settingLabel}>Gündəlik xatırlatma</Text>
-          <Text style={styles.settingHint}>Saat 08:00 və 20:00-da bildiriş</Text>
+          <Text style={styles.settingHint}>Saat 08:00 və 20:00-da AI-nin yazdığı bildiriş</Text>
         </View>
         <Switch
           value={remindersOn}
