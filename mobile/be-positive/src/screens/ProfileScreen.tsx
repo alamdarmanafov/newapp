@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import { LOCALE_OPTIONS } from '../i18n/content'
+import LanguagePickerModal from '../components/LanguagePickerModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { colors, radius, shadow } from '../theme'
 import type { JournalEntry } from '../types'
@@ -17,6 +18,8 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
   const userId = session?.user.id
   const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
   const [remindersOn, setRemindersOn] = useState(false)
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
+  const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
 
   useEffect(() => {
     if (userId) areNotificationsEnabled(userId).then(setRemindersOn)
@@ -81,16 +84,19 @@ export default function ProfileScreen({ entries }: ProfileScreenProps) {
         />
       </View>
 
-      <View style={styles.settingRow}>
+      <Pressable style={styles.settingRow} onPress={() => setLanguagePickerOpen(true)}>
         <View style={{ flex: 1 }}>
           <Text style={styles.settingLabel}>{t('profile.language')}</Text>
         </View>
-        <LanguageSwitcher />
-      </View>
+        <Text style={styles.languageValue}>{currentLanguageName}</Text>
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
 
       <Pressable style={styles.signOutButton} onPress={signOut}>
         <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
       </Pressable>
+
+      <LanguagePickerModal visible={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
     </View>
   )
 }
@@ -177,6 +183,16 @@ const styles = StyleSheet.create({
   settingHint: {
     marginTop: 4,
     fontSize: 12.5,
+    color: colors.muted,
+  },
+  languageValue: {
+    fontSize: 14.5,
+    color: colors.muted,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  chevron: {
+    fontSize: 20,
     color: colors.muted,
   },
   signOutButton: {

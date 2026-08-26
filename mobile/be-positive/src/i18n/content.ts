@@ -2,6 +2,17 @@ import type { MoodKey } from '../types'
 
 export type Locale = 'az' | 'en'
 
+export interface LocaleOption {
+  code: Locale
+  name: string
+}
+
+// Add new languages here — the Profile language picker renders this list.
+export const LOCALE_OPTIONS: LocaleOption[] = [
+  { code: 'az', name: 'Azərbaycan' },
+  { code: 'en', name: 'English' },
+]
+
 export const MOOD_META: Record<MoodKey, { emoji: string; az: string; en: string }> = {
   terrible: { emoji: '😔', az: 'Çətin', en: 'Terrible' },
   bad: { emoji: '😕', az: 'Zəif', en: 'Bad' },
