@@ -1,194 +1,94 @@
 import { useState } from 'react'
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import MoodPicker from '../components/MoodPicker'
+import { View } from 'react-native'
+import CheckInScreen from './CheckInScreen'
+import FactorsScreen from './FactorsScreen'
+import SavedScreen from './SavedScreen'
 import { fetchAiCoachMessage } from '../aiCoach'
 import { generateCoachMessage } from '../coach'
-import { colors, radius, shadow } from '../theme'
-import type { JournalEntry, MoodKey } from '../types'
+import { MOOD_OPTIONS } from '../types'
+import type { JournalEntry } from '../types'
 
 interface TodayScreenProps {
   onSave: (entry: JournalEntry) => void
+  streak: number
 }
 
-export default function TodayScreen({ onSave }: TodayScreenProps) {
-  const [mood, setMood] = useState<MoodKey | null>(null)
+type Step = 'checkin' | 'factors' | 'saved'
+
+export default function TodayScreen({ onSave, streak }: TodayScreenProps) {
+  const [step, setStep] = useState<Step>('checkin')
+  const [moodIndex, setMoodIndex] = useState(2)
+  const [factors, setFactors] = useState<string[]>([])
   const [note, setNote] = useState('')
   const [gratitude, setGratitude] = useState('')
-  const [coachMessage, setCoachMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [coachMessage, setCoachMessage] = useState<string | null>(null)
+  const [savedEntry, setSavedEntry] = useState<JournalEntry | null>(null)
 
-  const handleReflect = async () => {
-    if (!mood) return
-    setLoading(true)
-    const aiMessage = await fetchAiCoachMessage(mood, note, gratitude)
-    setCoachMessage(aiMessage ?? generateCoachMessage(mood, note))
-    setLoading(false)
+  const toggleFactor = (label: string) => {
+    setFactors((current) =>
+      current.includes(label) ? current.filter((item) => item !== label) : [...current, label]
+    )
   }
 
-  const handleSave = () => {
-    if (!mood || !coachMessage) return
-    onSave({
+  const handleFactorsContinue = async () => {
+    const mood = MOOD_OPTIONS[moodIndex].key
+    setStep('saved')
+    setLoading(true)
+
+    const aiMessage = await fetchAiCoachMessage(mood, note, gratitude)
+    const message = aiMessage ?? generateCoachMessage(mood, note)
+
+    const entry: JournalEntry = {
       id: `${Date.now()}`,
       createdAt: new Date().toISOString(),
       mood,
+      factors,
       note: note.trim(),
       gratitude: gratitude.trim(),
-      coachMessage,
-    })
-    setMood(null)
+      coachMessage: message,
+    }
+
+    setCoachMessage(message)
+    setSavedEntry(entry)
+    setLoading(false)
+  }
+
+  const handleFinish = () => {
+    if (savedEntry) onSave(savedEntry)
+    setStep('checkin')
+    setMoodIndex(2)
+    setFactors([])
     setNote('')
     setGratitude('')
     setCoachMessage(null)
-  }
-
-  const handleRewrite = () => {
-    setCoachMessage(null)
+    setSavedEntry(null)
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Bu gün özünü necə hiss edirsən?</Text>
-      <MoodPicker value={mood} onChange={setMood} />
-
-      <Text style={styles.fieldLabel}>Nə düşünürsən? (istəyə bağlı)</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="Bu gün seni narahat edən və ya sevindirən nədir?"
-        placeholderTextColor={colors.muted}
-        multiline
-        numberOfLines={3}
-        value={note}
-        onChangeText={setNote}
-        editable={!coachMessage}
-      />
-
-      <Text style={styles.fieldLabel}>Bu gün nəyə görə minnətdarsan? (istəyə bağlı)</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="Kiçik də olsa, bir şey yaz"
-        placeholderTextColor={colors.muted}
-        multiline
-        numberOfLines={2}
-        value={gratitude}
-        onChangeText={setGratitude}
-        editable={!coachMessage}
-      />
-
-      {!coachMessage ? (
-        <Pressable
-          style={[styles.primaryButton, (!mood || loading) && styles.primaryButtonDisabled]}
-          onPress={handleReflect}
-          disabled={!mood || loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.primaryButtonText}>Paylaş və məsləhət al</Text>
-          )}
-        </Pressable>
-      ) : (
-        <View style={styles.coachCard}>
-          <Text style={styles.coachLabel}>Be Positive deyir:</Text>
-          <Text style={styles.coachMessage}>{coachMessage}</Text>
-          <View style={styles.coachActions}>
-            <Pressable style={styles.secondaryButton} onPress={handleRewrite}>
-              <Text style={styles.secondaryButtonText}>Yenidən yaz</Text>
-            </Pressable>
-            <Pressable style={[styles.primaryButton, styles.primaryButtonInRow]} onPress={handleSave}>
-              <Text style={styles.primaryButtonText}>Gündəliyə əlavə et</Text>
-            </Pressable>
-          </View>
-        </View>
+    <View style={{ flex: 1 }}>
+      {step === 'checkin' && (
+        <CheckInScreen value={moodIndex} onChange={setMoodIndex} onContinue={() => setStep('factors')} />
       )}
-    </ScrollView>
+      {step === 'factors' && (
+        <FactorsScreen
+          factors={factors}
+          onToggleFactor={toggleFactor}
+          note={note}
+          onChangeNote={setNote}
+          gratitude={gratitude}
+          onChangeGratitude={setGratitude}
+          onContinue={handleFactorsContinue}
+        />
+      )}
+      {step === 'saved' && (
+        <SavedScreen
+          loading={loading}
+          coachMessage={coachMessage}
+          streak={savedEntry ? streak + 1 : streak}
+          onFinish={handleFinish}
+        />
+      )}
+    </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  fieldLabel: {
-    marginTop: 20,
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 14,
-    fontSize: 14,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    minHeight: 60,
-    textAlignVertical: 'top',
-  },
-  primaryButton: {
-    marginTop: 24,
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    alignItems: 'center',
-    ...shadow.soft,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.4,
-  },
-  primaryButtonInRow: {
-    marginTop: 0,
-    paddingHorizontal: 16,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  secondaryButton: {
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  secondaryButtonText: {
-    color: colors.muted,
-    fontWeight: '600',
-  },
-  coachCard: {
-    marginTop: 20,
-    backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    padding: 20,
-    ...shadow.card,
-  },
-  coachLabel: {
-    color: colors.accent,
-    fontWeight: '700',
-    fontSize: 13,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  coachMessage: {
-    color: '#ffffff',
-    fontSize: 16,
-    lineHeight: 23,
-  },
-  coachActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 20,
-  },
-})

@@ -1,15 +1,20 @@
 export const colors = {
-  primary: '#0808c1',
-  primaryDark: '#060690',
-  primarySoft: '#eef0ff',
-  accent: '#fff45c',
+  primary: '#2F8FE0',
+  primaryDark: '#1C6FBB',
+  primarySoft: '#EAF4FE',
+  accent: '#2F8FE0',
   background: '#ffffff',
-  surface: '#f6f7fb',
-  border: '#ececf4',
-  text: '#181b2e',
-  muted: '#767b94',
+  surface: '#F4F9FE',
+  border: '#DCEEFB',
+  text: '#12233D',
+  muted: '#6B7A90',
   danger: '#e5484d',
+  flame: '#FF9F45',
 }
+
+// Mood intensity ramp — muted slate-blue (worst) to vivid blue (best), so the
+// whole check-in flow stays inside the white/light-blue palette.
+export const MOOD_COLORS = ['#9AACC2', '#7EB8E0', '#5FA8E5', '#3B93E0', '#1C6FBB']
 
 export const radius = {
   sm: 10,
@@ -29,16 +34,16 @@ export const spacing = {
 
 export const shadow = {
   card: {
-    shadowColor: '#0808c1',
+    shadowColor: '#2F8FE0',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 14,
     elevation: 3,
   },
   soft: {
-    shadowColor: '#0808c1',
+    shadowColor: '#2F8FE0',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 1,
   },
