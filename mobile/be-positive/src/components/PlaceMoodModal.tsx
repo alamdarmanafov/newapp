@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
-import { MOOD_META, MOOD_ORDER } from '../i18n/content'
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { MOOD_META, MOOD_ORDER, PLACE_CATEGORIES } from '../i18n/content'
 import { useLocale } from '../i18n/LocaleContext'
 import { colors, radius, shadow } from '../theme'
 import type { MoodKey } from '../types'
@@ -8,16 +8,17 @@ import type { MoodKey } from '../types'
 interface PlaceMoodModalProps {
   visible: boolean
   submitting: boolean
-  onSubmit: (mood: MoodKey) => void
+  onSubmit: (mood: MoodKey, category: string) => void
   onClose: () => void
 }
 
 export default function PlaceMoodModal({ visible, submitting, onSubmit, onClose }: PlaceMoodModalProps) {
   const { t, locale } = useLocale()
   const [selected, setSelected] = useState<MoodKey | null>(null)
+  const [category, setCategory] = useState(PLACE_CATEGORIES[0].id)
 
   const handleSubmit = () => {
-    if (selected) onSubmit(selected)
+    if (selected) onSubmit(selected, category)
   }
 
   return (
@@ -27,6 +28,24 @@ export default function PlaceMoodModal({ visible, submitting, onSubmit, onClose 
           <Text style={styles.title}>{t('places.pickerTitle')}</Text>
           <Text style={styles.subtitle}>{t('places.pickerSubtitle')}</Text>
 
+          <Text style={styles.sectionLabel}>{t('places.categoryLabel')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={styles.categoryRow}>
+            {PLACE_CATEGORIES.map((cat) => {
+              const isSelected = category === cat.id
+              return (
+                <Pressable
+                  key={cat.id}
+                  style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                  onPress={() => setCategory(cat.id)}
+                >
+                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                  <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelSelected]}>{cat[locale]}</Text>
+                </Pressable>
+              )
+            })}
+          </ScrollView>
+
+          <Text style={styles.sectionLabel}>{t('places.moodLabel')}</Text>
           <View style={styles.moodRow}>
             {MOOD_ORDER.map((mood) => {
               const meta = MOOD_META[mood]
@@ -81,6 +100,47 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
     marginBottom: 18,
+  },
+  sectionLabel: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 10,
+  },
+  categoryScroll: {
+    marginBottom: 20,
+  },
+  categoryRow: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  categoryChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  categoryEmoji: {
+    fontSize: 15,
+  },
+  categoryLabel: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: colors.muted,
+  },
+  categoryLabelSelected: {
+    color: colors.primary,
   },
   moodRow: {
     flexDirection: 'row',

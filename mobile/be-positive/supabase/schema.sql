@@ -75,10 +75,12 @@ create table if not exists public.place_moods (
   lat double precision not null,
   lng double precision not null,
   mood smallint not null check (mood between 0 and 4),
+  category text not null default 'other' check (category in ('gym', 'restaurant', 'cafe', 'work', 'park', 'other')),
   created_at timestamptz not null default now()
 );
 
 create index if not exists place_moods_lat_lng_idx on public.place_moods (lat, lng);
+create index if not exists place_moods_category_idx on public.place_moods (category);
 
 alter table public.place_moods enable row level security;
 
@@ -93,7 +95,8 @@ create or replace function public.place_mood_aggregates(
   min_lat double precision,
   max_lat double precision,
   min_lng double precision,
-  max_lng double precision
+  max_lng double precision,
+  p_category text default null
 )
 returns table (grid_lat double precision, grid_lng double precision, avg_mood double precision, entry_count bigint)
 language sql
@@ -108,6 +111,7 @@ as $$
   from public.place_moods
   where lat between min_lat and max_lat
     and lng between min_lng and max_lng
+    and (p_category is null or category = p_category)
   group by grid_lat, grid_lng
   having count(*) >= 3
 $$;

@@ -45,6 +45,26 @@ export const FACTOR_DEFS: FactorDef[] = [
   { id: 'travel', emoji: '✈️', az: 'Səyahət', en: 'Travel' },
 ]
 
+export interface PlaceCategoryDef {
+  id: string
+  emoji: string
+  az: string
+  en: string
+}
+
+export const PLACE_CATEGORIES: PlaceCategoryDef[] = [
+  { id: 'gym', emoji: '🏋️', az: 'İdman zalı', en: 'Gym' },
+  { id: 'restaurant', emoji: '🍽️', az: 'Restoran', en: 'Restaurant' },
+  { id: 'cafe', emoji: '☕️', az: 'Kafe', en: 'Cafe' },
+  { id: 'work', emoji: '💼', az: 'İş', en: 'Work' },
+  { id: 'park', emoji: '🌳', az: 'Park', en: 'Park' },
+  { id: 'other', emoji: '📍', az: 'Digər', en: 'Other' },
+]
+
+export function placeCategoryLabel(id: string, locale: Locale): string {
+  return PLACE_CATEGORIES.find((c) => c.id === id)?.[locale] ?? id
+}
+
 export function moodLabel(key: MoodKey, locale: Locale): string {
   return MOOD_META[key][locale]
 }

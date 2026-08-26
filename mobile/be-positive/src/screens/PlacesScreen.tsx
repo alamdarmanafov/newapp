@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import MapView, { Circle, type Region } from 'react-native-maps'
 import * as Location from 'expo-location'
 import PlaceMoodModal from '../components/PlaceMoodModal'
+import { PLACE_CATEGORIES } from '../i18n/content'
 import { useLocale } from '../i18n/LocaleContext'
 import { fetchPlaceAggregates, submitPlaceMood, type PlaceAggregate } from '../places'
 import { colors, MOOD_COLORS, radius, shadow } from '../theme'
@@ -11,12 +12,13 @@ import type { MoodKey } from '../types'
 const DEFAULT_DELTA = 0.03
 
 export default function PlacesScreen() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const [region, setRegion] = useState<Region | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [aggregates, setAggregates] = useState<PlaceAggregate[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const fetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -36,14 +38,20 @@ export default function PlacesScreen() {
     })()
   }, [])
 
-  const loadAggregates = useCallback((r: Region) => {
-    fetchPlaceAggregates({
-      minLat: r.latitude - r.latitudeDelta / 2,
-      maxLat: r.latitude + r.latitudeDelta / 2,
-      minLng: r.longitude - r.longitudeDelta / 2,
-      maxLng: r.longitude + r.longitudeDelta / 2,
-    }).then(setAggregates)
-  }, [])
+  const loadAggregates = useCallback(
+    (r: Region) => {
+      fetchPlaceAggregates(
+        {
+          minLat: r.latitude - r.latitudeDelta / 2,
+          maxLat: r.latitude + r.latitudeDelta / 2,
+          minLng: r.longitude - r.longitudeDelta / 2,
+          maxLng: r.longitude + r.longitudeDelta / 2,
+        },
+        activeCategory
+      ).then(setAggregates)
+    },
+    [activeCategory]
+  )
 
   useEffect(() => {
     if (region) loadAggregates(region)
@@ -55,11 +63,11 @@ export default function PlacesScreen() {
     fetchTimer.current = setTimeout(() => loadAggregates(r), 400)
   }
 
-  const handleSubmitMood = async (mood: MoodKey) => {
+  const handleSubmitMood = async (mood: MoodKey, category: string) => {
     setSubmitting(true)
     try {
       const position = await Location.getCurrentPositionAsync({})
-      const message = await submitPlaceMood(mood, position.coords.latitude, position.coords.longitude)
+      const message = await submitPlaceMood(mood, category, position.coords.latitude, position.coords.longitude)
       if (message) {
         Alert.alert(t('places.errorTitle'), message)
       } else {
@@ -101,27 +109,56 @@ export default function PlacesScreen() {
         <Text style={styles.subtitle}>{t('places.subtitle')}</Text>
       </View>
 
-      <MapView style={styles.map} initialRegion={region} onRegionChangeComplete={handleRegionChangeComplete} showsUserLocation>
-        {aggregates.map((agg) => (
-          <Circle
-            key={`${agg.gridLat}-${agg.gridLng}`}
-            center={{ latitude: agg.gridLat, longitude: agg.gridLng }}
-            radius={90}
-            fillColor={`${MOOD_COLORS[Math.round(agg.avgMood)]}99`}
-            strokeWidth={0}
-          />
-        ))}
-      </MapView>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterRow}
+      >
+        <Pressable
+          style={[styles.filterChip, activeCategory === null && styles.filterChipSelected]}
+          onPress={() => setActiveCategory(null)}
+        >
+          <Text style={[styles.filterLabel, activeCategory === null && styles.filterLabelSelected]}>{t('places.filterAll')}</Text>
+        </Pressable>
+        {PLACE_CATEGORIES.map((cat) => {
+          const isSelected = activeCategory === cat.id
+          return (
+            <Pressable
+              key={cat.id}
+              style={[styles.filterChip, isSelected && styles.filterChipSelected]}
+              onPress={() => setActiveCategory(cat.id)}
+            >
+              <Text style={styles.filterEmoji}>{cat.emoji}</Text>
+              <Text style={[styles.filterLabel, isSelected && styles.filterLabelSelected]}>{cat[locale]}</Text>
+            </Pressable>
+          )
+        })}
+      </ScrollView>
 
-      {aggregates.length === 0 && (
-        <View style={styles.emptyBanner}>
-          <Text style={styles.emptyBannerText}>{t('places.empty')}</Text>
-        </View>
-      )}
+      <View style={styles.mapArea}>
+        <MapView style={styles.map} initialRegion={region} onRegionChangeComplete={handleRegionChangeComplete} showsUserLocation>
+          {aggregates.map((agg) => (
+            <Circle
+              key={`${agg.gridLat}-${agg.gridLng}`}
+              center={{ latitude: agg.gridLat, longitude: agg.gridLng }}
+              radius={90}
+              fillColor={`${MOOD_COLORS[Math.round(agg.avgMood)]}99`}
+              strokeWidth={0}
+            />
+          ))}
+        </MapView>
 
-      <Pressable style={styles.addButton} onPress={() => setPickerOpen(true)}>
-        <Text style={styles.addButtonText}>{t('places.addButton')}</Text>
-      </Pressable>
+        {aggregates.length === 0 && (
+          <View style={styles.emptyBanner}>
+            <Text style={styles.emptyBannerText}>{t('places.empty')}</Text>
+          </View>
+        )}
+
+        <Pressable style={styles.addButton} onPress={() => setPickerOpen(true)}>
+          <Text style={styles.addButtonText}>{t('places.addButton')}</Text>
+        </Pressable>
+      </View>
 
       <PlaceMoodModal
         visible={pickerOpen}
@@ -153,6 +190,46 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontSize: 12.5,
     color: colors.muted,
+  },
+  filterScroll: {
+    flexGrow: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  filterRow: {
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  filterChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  filterEmoji: {
+    fontSize: 14,
+  },
+  filterLabel: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: colors.muted,
+  },
+  filterLabelSelected: {
+    color: colors.primary,
+  },
+  mapArea: {
+    flex: 1,
+    position: 'relative',
   },
   map: {
     flex: 1,
@@ -195,7 +272,7 @@ const styles = StyleSheet.create({
   },
   emptyBanner: {
     position: 'absolute',
-    top: 88,
+    top: 16,
     left: 20,
     right: 20,
     backgroundColor: colors.background,

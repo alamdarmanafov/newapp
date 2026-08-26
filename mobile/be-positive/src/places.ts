@@ -16,7 +16,7 @@ export interface MapBounds {
   maxLng: number
 }
 
-export async function submitPlaceMood(mood: MoodKey, lat: number, lng: number): Promise<string | null> {
+export async function submitPlaceMood(mood: MoodKey, category: string, lat: number, lng: number): Promise<string | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -25,18 +25,20 @@ export async function submitPlaceMood(mood: MoodKey, lat: number, lng: number): 
   const { error } = await supabase.from('place_moods').insert({
     user_id: user.id,
     mood: MOOD_ORDER.indexOf(mood),
+    category,
     lat,
     lng,
   })
   return error?.message ?? null
 }
 
-export async function fetchPlaceAggregates(bounds: MapBounds): Promise<PlaceAggregate[]> {
+export async function fetchPlaceAggregates(bounds: MapBounds, category: string | null): Promise<PlaceAggregate[]> {
   const { data, error } = await supabase.rpc('place_mood_aggregates', {
     min_lat: bounds.minLat,
     max_lat: bounds.maxLat,
     min_lng: bounds.minLng,
     max_lng: bounds.maxLng,
+    p_category: category,
   })
   if (error || !data) return []
 
