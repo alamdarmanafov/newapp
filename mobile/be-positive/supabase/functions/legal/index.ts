@@ -1,4 +1,4 @@
-import { corsHeaders } from '../_shared/gemini.ts'
+import { corsHeaders } from '../_shared/ai.ts'
 
 const EFFECTIVE_DATE = 'August 26, 2026'
 const CONTACT_EMAIL = 'alamdarmanafov@gmail.com'
@@ -37,7 +37,7 @@ function privacyPage(): string {
     <ul>
       <li><strong>Apple / Google</strong>: used for sign-in, per their own privacy policies.</li>
       <li><strong>Supabase</strong>: our backend provider, hosts your account and the data listed above.</li>
-      <li><strong>Google Gemini API</strong>: when you use the AI Coach or AI Chat, the text you write (your check-in note/gratitude, or your chat message) is sent to Google's Gemini API to generate a reply. It is not stored by us afterward.</li>
+      <li><strong>OpenAI API</strong>: when you use the AI Coach or AI Chat, the text you write (your check-in note/gratitude, or your chat message) is sent to OpenAI's API to generate a reply. It is not stored by us afterward.</li>
       <li><strong>Expo</strong>: delivers push notifications to your device using your push token.</li>
     </ul>
     <p>We do not use analytics or advertising SDKs, and we do not sell your data.</p>
@@ -74,7 +74,7 @@ function privacyPage(): string {
     <ul>
       <li><strong>Apple / Google</strong>: giriş üçün istifadə olunur, öz məxfilik siyasətlərinə uyğun.</li>
       <li><strong>Supabase</strong>: backend provayderimiz, hesabını və yuxarıdakı məlumatları saxlayır.</li>
-      <li><strong>Google Gemini API</strong>: AI Koç və ya AI Söhbətdən istifadə etdikdə, yazdığın mətn (qeyd/minnətdarlıq və ya söhbət mesajı) cavab yaratmaq üçün Google-un Gemini API-sinə göndərilir. Sonra bizdə saxlanılmır.</li>
+      <li><strong>OpenAI API</strong>: AI Koç və ya AI Söhbətdən istifadə etdikdə, yazdığın mətn (qeyd/minnətdarlıq və ya söhbət mesajı) cavab yaratmaq üçün OpenAI-nin API-sinə göndərilir. Sonra bizdə saxlanılmır.</li>
       <li><strong>Expo</strong>: push tokenindən istifadə edərək cihazına bildirişlər çatdırır.</li>
     </ul>
     <p>Analitika və ya reklam SDK-ları istifadə etmirik, məlumatlarını satmırıq.</p>

@@ -1,4 +1,4 @@
-import { corsHeaders, generateGeminiReply } from '../_shared/gemini.ts'
+import { corsHeaders, generateAiReply } from '../_shared/ai.ts'
 
 const SYSTEM_INSTRUCTIONS: Record<string, string> = {
   az:
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Invalid input' }, { status: 400, headers: corsHeaders })
   }
 
-  const result = await generateGeminiReply({ systemInstruction: SYSTEM_INSTRUCTIONS[language], message })
+  const result = await generateAiReply({ systemInstruction: SYSTEM_INSTRUCTIONS[language], message })
 
   if ('error' in result) {
     return Response.json({ error: result.error }, { status: result.status, headers: corsHeaders })

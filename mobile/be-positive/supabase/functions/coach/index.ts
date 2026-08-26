@@ -1,4 +1,4 @@
-import { corsHeaders, generateGeminiReply } from '../_shared/gemini.ts'
+import { corsHeaders, generateAiReply } from '../_shared/ai.ts'
 
 const MOOD_LABELS: Record<string, Record<string, string>> = {
   az: { terrible: 'çox pis', bad: 'pis', okay: 'normal', good: 'yaxşı', great: 'əla' },
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     .filter(Boolean)
     .join('\n')
 
-  const result = await generateGeminiReply({ systemInstruction: SYSTEM_INSTRUCTIONS[language], message: userMessage })
+  const result = await generateAiReply({ systemInstruction: SYSTEM_INSTRUCTIONS[language], message: userMessage })
 
   if ('error' in result) {
     return Response.json({ error: result.error }, { status: result.status, headers: corsHeaders })

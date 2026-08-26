@@ -4,7 +4,7 @@ import type { MoodKey } from './types'
 
 const REQUEST_TIMEOUT_MS = 12000
 
-// Calls the Supabase Edge Function `coach` (Gemini-powered). Returns null on
+// Calls the Supabase Edge Function `coach` (OpenAI-powered). Returns null on
 // any failure (network, timeout, missing server key, bad response) so the
 // caller can fall back to the local rule-based coach in coach.ts.
 export async function fetchAiCoachMessage(

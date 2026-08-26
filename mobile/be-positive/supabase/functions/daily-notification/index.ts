@@ -1,4 +1,4 @@
-import { corsHeaders, generateGeminiReply } from '../_shared/gemini.ts'
+import { corsHeaders, generateAiReply } from '../_shared/ai.ts'
 
 const INSTRUCTIONS: Record<string, Record<'morning' | 'evening', string>> = {
   az: {
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
   for (const lang of languages) {
     const instruction = INSTRUCTIONS[lang][slot]
-    const result = await generateGeminiReply({
+    const result = await generateAiReply({
       systemInstruction: instruction,
       message: slot === 'evening' ? 'Write the evening notification.' : 'Write the morning notification.',
       maxOutputTokens: 120,

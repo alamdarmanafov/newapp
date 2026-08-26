@@ -10,32 +10,36 @@ interface GenerateOptions {
   maxOutputTokens?: number
 }
 
-const GEMINI_MODEL = 'gemini-2.5-flash'
+const OPENAI_MODEL = 'gpt-4o-mini'
 
-export async function generateGeminiReply({
+export async function generateAiReply({
   systemInstruction,
   message,
   maxOutputTokens = 1024,
 }: GenerateOptions): Promise<{ text: string } | { error: string; status: number }> {
-  const apiKey = Deno.env.get('GEMINI_API_KEY')?.trim()
+  const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
   if (!apiKey) {
     return { error: 'AI service not configured', status: 503 }
   }
 
   let response: Response
   try {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: message }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          generationConfig: { maxOutputTokens, temperature: 0.8 },
-        }),
-      }
-    )
+    response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: message },
+        ],
+        max_tokens: maxOutputTokens,
+        temperature: 0.8,
+      }),
+    })
   } catch (err) {
     return { error: `AI request failed: ${err instanceof Error ? err.message : String(err)}`, status: 502 }
   }
@@ -52,7 +56,7 @@ export async function generateGeminiReply({
   }
 
   const data = await response.json()
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+  const text = data?.choices?.[0]?.message?.content?.trim()
   if (!text) {
     return { error: 'Empty response from AI', status: 502 }
   }
