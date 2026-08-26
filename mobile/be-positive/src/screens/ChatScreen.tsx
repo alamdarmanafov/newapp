@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   RefreshControl,
@@ -34,6 +34,20 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow'
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide'
+
+    const showSub = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height))
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0))
+
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
+  }, [])
 
   const loadUsage = useCallback(async () => {
     if (!userId) return
@@ -99,7 +113,7 @@ export default function ChatScreen() {
   const canType = remaining !== null && remaining > 0 && !loading
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={styles.root}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.avatarWrap}>
@@ -126,13 +140,14 @@ export default function ChatScreen() {
         style={styles.conversation}
         contentContainerStyle={[styles.conversationContent, !sentMessage && !loading && styles.conversationContentCentered]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
         {!sentMessage && !loading && (
-          <View style={styles.emptyState}>
+          <Pressable style={styles.emptyState} onPress={Keyboard.dismiss}>
             <Text style={styles.emptyEmoji}>💬</Text>
             <Text style={styles.emptyText}>{t('chat.emptyState')}</Text>
-          </View>
+          </Pressable>
         )}
 
         {sentMessage && (
@@ -168,7 +183,7 @@ export default function ChatScreen() {
         {error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
 
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, keyboardHeight > 0 && { marginBottom: keyboardHeight }]}>
         <TextInput
           style={styles.input}
           placeholder={t('chat.placeholder')}
@@ -186,7 +201,7 @@ export default function ChatScreen() {
           <Text style={styles.sendButtonIcon}>➤</Text>
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   )
 }
 
