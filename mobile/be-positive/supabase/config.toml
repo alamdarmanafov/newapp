@@ -18,3 +18,8 @@ verify_jwt = false
 # gateway's normal JWT check should stay on.
 [functions.delete-account]
 verify_jwt = true
+
+# Public static pages (Privacy Policy / Terms), opened directly in a browser
+# by users and App Store reviewers — no auth at all.
+[functions.legal]
+verify_jwt = false

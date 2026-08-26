@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import Constants from 'expo-constants'
 import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
+import { FUNCTIONS_BASE_URL } from '../config'
 import { LOCALE_OPTIONS } from '../i18n/content'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
@@ -157,6 +158,16 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         )}
       </Pressable>
 
+      <View style={styles.legalRow}>
+        <Pressable onPress={() => Linking.openURL(`${FUNCTIONS_BASE_URL}/legal`)}>
+          <Text style={styles.legalLink}>{t('profile.privacyPolicy')}</Text>
+        </Pressable>
+        <Text style={styles.legalDot}>·</Text>
+        <Pressable onPress={() => Linking.openURL(`${FUNCTIONS_BASE_URL}/legal/terms`)}>
+          <Text style={styles.legalLink}>{t('profile.termsOfUse')}</Text>
+        </Pressable>
+      </View>
+
       <Text style={styles.versionText}>
         {t('profile.version')} {appVersion}
       </Text>
@@ -295,6 +306,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13.5,
     textDecorationLine: 'underline',
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 28,
+  },
+  legalLink: {
+    fontSize: 12.5,
+    color: colors.muted,
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    fontSize: 12.5,
+    color: colors.muted,
   },
   versionText: {
     marginTop: 6,
