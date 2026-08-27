@@ -5,7 +5,8 @@ import { useLocale } from '../i18n/LocaleContext'
 import { ACHIEVEMENT_DEFS, type AchievementDef } from '../i18n/content'
 import type { MyPlaceCategoryStat } from '../places'
 import { computeAchievementValues, computeTimeOfDayCounts, isAchievementUnlocked } from '../achievements'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 import type { TranslationKey } from '../i18n/translations'
 
 interface AchievementsSectionProps {
@@ -26,6 +27,8 @@ const METRIC_KEY: Record<AchievementDef['metric'], TranslationKey> = {
 
 export default function AchievementsSection({ entries, placeStats, showHeader = true }: AchievementsSectionProps) {
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   const values = useMemo(() => computeAchievementValues(entries, placeStats), [entries, placeStats])
   const timeOfDayCounts = useMemo(() => computeTimeOfDayCounts(entries), [entries])
@@ -69,98 +72,100 @@ export default function AchievementsSection({ entries, placeStats, showHeader = 
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    width: '100%',
-    marginTop: 20,
-  },
-  rootCompact: {
-    marginTop: 0,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  sectionSubtitle: {
-    marginTop: 4,
-    fontSize: 12.5,
-    color: colors.muted,
-    lineHeight: 18,
-  },
-  unlockedCount: {
-    marginTop: 10,
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  grid: {
-    marginTop: 14,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  tile: {
-    width: '30%',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 6,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  badge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeUnlocked: {
-    backgroundColor: colors.primarySoft,
-    ...shadow.soft,
-  },
-  badgeLocked: {
-    backgroundColor: colors.border,
-    opacity: 0.6,
-  },
-  badgeEmoji: {
-    fontSize: 22,
-  },
-  badgeEmojiLocked: {
-    opacity: 0.4,
-  },
-  lockWrap: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lockIcon: {
-    fontSize: 9,
-  },
-  tileName: {
-    marginTop: 8,
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  tileNameLocked: {
-    color: colors.muted,
-  },
-  tileHint: {
-    marginTop: 2,
-    fontSize: 9.5,
-    color: colors.muted,
-    textAlign: 'center',
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      width: '100%',
+      marginTop: 20,
+    },
+    rootCompact: {
+      marginTop: 0,
+    },
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    sectionSubtitle: {
+      marginTop: 4,
+      fontSize: 12.5,
+      color: colors.muted,
+      lineHeight: 18,
+    },
+    unlockedCount: {
+      marginTop: 10,
+      fontSize: 12.5,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    grid: {
+      marginTop: 14,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    tile: {
+      width: '30%',
+      alignItems: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 6,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    badge: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeUnlocked: {
+      backgroundColor: colors.primarySoft,
+      ...shadow.soft,
+    },
+    badgeLocked: {
+      backgroundColor: colors.border,
+      opacity: 0.6,
+    },
+    badgeEmoji: {
+      fontSize: 22,
+    },
+    badgeEmojiLocked: {
+      opacity: 0.4,
+    },
+    lockWrap: {
+      position: 'absolute',
+      bottom: -2,
+      right: -2,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    lockIcon: {
+      fontSize: 9,
+    },
+    tileName: {
+      marginTop: 8,
+      fontSize: 11.5,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    tileNameLocked: {
+      color: colors.muted,
+    },
+    tileHint: {
+      marginTop: 2,
+      fontSize: 9.5,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+  })
+}

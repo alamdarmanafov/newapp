@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useLocale } from '../i18n/LocaleContext'
 import { supabase } from '../supabaseClient'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 interface PasswordModalProps {
   visible: boolean
@@ -11,6 +12,8 @@ interface PasswordModalProps {
 
 export default function PasswordModal({ visible, onClose }: PasswordModalProps) {
   const { t } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -95,79 +98,81 @@ export default function PasswordModal({ visible, onClose }: PasswordModalProps) 
   )
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(18, 35, 61, 0.35)',
-    justifyContent: 'flex-end',
-  },
-  backdropTouch: {
-    ...StyleSheet.absoluteFill,
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: 24,
-    paddingBottom: 34,
-    ...shadow.card,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.muted,
-    marginBottom: 18,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    marginBottom: 12,
-  },
-  error: {
-    color: colors.danger,
-    fontSize: 13,
-    marginTop: 2,
-    marginBottom: 4,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 10,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cancelText: {
-    color: colors.muted,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  saveButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-  },
-  saveText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(18, 35, 61, 0.35)',
+      justifyContent: 'flex-end',
+    },
+    backdropTouch: {
+      ...StyleSheet.absoluteFill,
+    },
+    sheet: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      padding: 24,
+      paddingBottom: 34,
+      ...shadow.card,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: 13,
+      color: colors.muted,
+      marginBottom: 18,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.lg,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      fontSize: 15,
+      color: colors.text,
+      backgroundColor: colors.surface,
+      marginBottom: 12,
+    },
+    error: {
+      color: colors.danger,
+      fontSize: 13,
+      marginTop: 2,
+      marginBottom: 4,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 10,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: radius.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cancelText: {
+      color: colors.muted,
+      fontWeight: '700',
+      fontSize: 15,
+    },
+    saveButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: radius.lg,
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+    },
+    saveText: {
+      color: '#ffffff',
+      fontWeight: '700',
+      fontSize: 15,
+    },
+  })
+}

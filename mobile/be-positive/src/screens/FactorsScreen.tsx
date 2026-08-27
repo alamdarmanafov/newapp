@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from 'react-native'
 import { useLocale } from '../i18n/LocaleContext'
 import { FACTOR_DEFS } from '../i18n/content'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 interface FactorsScreenProps {
   factors: string[]
@@ -23,6 +25,8 @@ export default function FactorsScreen({
   onContinue,
 }: FactorsScreenProps) {
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   return (
     <View style={styles.root}>
@@ -85,107 +89,109 @@ export default function FactorsScreen({
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 4,
-  },
-  progressRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  progressDot: {
-    width: 34,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-  },
-  progressDotActive: {
-    backgroundColor: colors.primary,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  scroll: {
-    padding: 20,
-    paddingTop: 16,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 38,
-    paddingHorizontal: 14,
-    borderRadius: 19,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipOn: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipEmoji: {
-    fontSize: 14,
-  },
-  chipLabel: {
-    fontSize: 13.5,
-    color: colors.text,
-  },
-  chipLabelOn: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  card: {
-    marginTop: 16,
-    padding: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.muted,
-    marginBottom: 8,
-  },
-  input: {
-    fontSize: 14,
-    color: colors.text,
-    minHeight: 44,
-    textAlignVertical: 'top',
-  },
-  footer: {
-    padding: 20,
-    paddingTop: 8,
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    paddingVertical: 16,
-    alignItems: 'center',
-    ...shadow.card,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    header: {
+      paddingHorizontal: 24,
+      paddingTop: 4,
+    },
+    progressRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 16,
+    },
+    progressDot: {
+      width: 34,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+    },
+    progressDotActive: {
+      backgroundColor: colors.primary,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: 13,
+      color: colors.muted,
+    },
+    scroll: {
+      padding: 20,
+      paddingTop: 16,
+    },
+    chipsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      height: 38,
+      paddingHorizontal: 14,
+      borderRadius: 19,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    chipOn: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    chipEmoji: {
+      fontSize: 14,
+    },
+    chipLabel: {
+      fontSize: 13.5,
+      color: colors.text,
+    },
+    chipLabelOn: {
+      color: '#ffffff',
+      fontWeight: '700',
+    },
+    card: {
+      marginTop: 16,
+      padding: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cardLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.muted,
+      marginBottom: 8,
+    },
+    input: {
+      fontSize: 14,
+      color: colors.text,
+      minHeight: 44,
+      textAlignVertical: 'top',
+    },
+    footer: {
+      padding: 20,
+      paddingTop: 8,
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: radius.xl,
+      paddingVertical: 16,
+      alignItems: 'center',
+      ...shadow.card,
+    },
+    primaryButtonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+  })
+}

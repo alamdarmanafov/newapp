@@ -16,7 +16,8 @@ import {
   timeOfDayBucketForHour,
 } from '../i18n/content'
 import type { MyPlaceCategoryStat } from '../places'
-import { colors, MOOD_COLORS, radius, shadow } from '../theme'
+import { MOOD_COLORS, radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 interface InsightsSectionProps {
   entries: JournalEntry[]
@@ -36,6 +37,8 @@ function startOfDay(date: Date) {
 
 export default function InsightsSection({ entries, placeStats, showHeader = true }: InsightsSectionProps) {
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const dayLabels = DAY_LABELS[locale]
 
   const week = useMemo(() => {
@@ -320,269 +323,271 @@ export default function InsightsSection({ entries, placeStats, showHeader = true
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    width: '100%',
-    marginTop: 28,
-  },
-  rootCompact: {
-    marginTop: 0,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  sectionSubtitle: {
-    marginTop: 4,
-    marginBottom: 14,
-    fontSize: 12.5,
-    color: colors.muted,
-    lineHeight: 18,
-  },
-  chartCard: {
-    padding: 18,
-    borderRadius: radius.xl,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.soft,
-  },
-  chartHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  chartHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  chartIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chartIcon: {
-    fontSize: 15,
-  },
-  chartLabel: {
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  chartValue: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  dayLabelsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-    paddingHorizontal: 8,
-  },
-  dayLabel: {
-    fontSize: 10,
-    color: colors.muted,
-  },
-  goodDaysRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
-  goodDaysTile: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  goodDaysValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  goodDaysLabel: {
-    marginTop: 4,
-    fontSize: 11,
-    color: colors.muted,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  patternCard: {
-    marginTop: 14,
-    padding: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primarySoft,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  patternTagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  patternSparkle: {
-    fontSize: 13,
-  },
-  patternTag: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primary,
-    letterSpacing: 0.6,
-  },
-  patternText: {
-    marginTop: 8,
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-    lineHeight: 21,
-  },
-  rowCard: {
-    marginTop: 14,
-    padding: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  rowIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowIcon: {
-    fontSize: 20,
-  },
-  rowLabel: {
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  rowValue: {
-    marginTop: 3,
-    fontSize: 15.5,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  compareCard: {
-    marginTop: 14,
-    padding: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  compareCardUp: {
-    backgroundColor: '#EAF8EF',
-    borderColor: '#CDEEDA',
-  },
-  compareCardDown: {
-    backgroundColor: '#FBEDED',
-    borderColor: '#F4D3D3',
-  },
-  compareIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compareText: {
-    fontSize: 14.5,
-    fontWeight: '700',
-    color: colors.text,
-    lineHeight: 20,
-  },
-  compareSub: {
-    marginTop: 3,
-    fontSize: 11.5,
-    color: colors.muted,
-    fontWeight: '500',
-  },
-  rankCard: {
-    marginTop: 14,
-    padding: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  rankTitle: {
-    fontSize: 12.5,
-    color: colors.muted,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  rankRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  rankRowSpacing: {
-    marginTop: 12,
-  },
-  rankNum: {
-    width: 20,
-    height: 20,
-    borderRadius: 7,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rankNumText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  rankEmoji: {
-    fontSize: 16,
-    width: 20,
-    textAlign: 'center',
-  },
-  rankName: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: colors.text,
-    flex: 1,
-  },
-  rankBarTrack: {
-    flex: 1.4,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.primarySoft,
-    overflow: 'hidden',
-  },
-  rankBarFill: {
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-  rankMeta: {
-    fontSize: 11,
-    color: colors.muted,
-    fontWeight: '600',
-    width: 44,
-    textAlign: 'right',
-  },
-  empty: {
-    marginTop: 20,
-    textAlign: 'center',
-    color: colors.muted,
-    fontSize: 14,
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      width: '100%',
+      marginTop: 28,
+    },
+    rootCompact: {
+      marginTop: 0,
+    },
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    sectionSubtitle: {
+      marginTop: 4,
+      marginBottom: 14,
+      fontSize: 12.5,
+      color: colors.muted,
+      lineHeight: 18,
+    },
+    chartCard: {
+      padding: 18,
+      borderRadius: radius.xl,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...shadow.soft,
+    },
+    chartHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    chartHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    chartIconWrap: {
+      width: 30,
+      height: 30,
+      borderRadius: 10,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chartIcon: {
+      fontSize: 15,
+    },
+    chartLabel: {
+      fontSize: 12.5,
+      color: colors.muted,
+    },
+    chartValue: {
+      fontSize: 26,
+      fontWeight: '800',
+      color: colors.primary,
+    },
+    dayLabelsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 4,
+      paddingHorizontal: 8,
+    },
+    dayLabel: {
+      fontSize: 10,
+      color: colors.muted,
+    },
+    goodDaysRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 14,
+    },
+    goodDaysTile: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    goodDaysValue: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: colors.primary,
+    },
+    goodDaysLabel: {
+      marginTop: 4,
+      fontSize: 11,
+      color: colors.muted,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    patternCard: {
+      marginTop: 14,
+      padding: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.primarySoft,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    patternTagRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    patternSparkle: {
+      fontSize: 13,
+    },
+    patternTag: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.primary,
+      letterSpacing: 0.6,
+    },
+    patternText: {
+      marginTop: 8,
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+      lineHeight: 21,
+    },
+    rowCard: {
+      marginTop: 14,
+      padding: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+    },
+    rowIconWrap: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rowIcon: {
+      fontSize: 20,
+    },
+    rowLabel: {
+      fontSize: 12.5,
+      color: colors.muted,
+    },
+    rowValue: {
+      marginTop: 3,
+      fontSize: 15.5,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    compareCard: {
+      marginTop: 14,
+      padding: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+    },
+    compareCardUp: {
+      backgroundColor: '#EAF8EF',
+      borderColor: '#CDEEDA',
+    },
+    compareCardDown: {
+      backgroundColor: '#FBEDED',
+      borderColor: '#F4D3D3',
+    },
+    compareIconWrap: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: '#ffffff',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    compareText: {
+      fontSize: 14.5,
+      fontWeight: '700',
+      color: colors.text,
+      lineHeight: 20,
+    },
+    compareSub: {
+      marginTop: 3,
+      fontSize: 11.5,
+      color: colors.muted,
+      fontWeight: '500',
+    },
+    rankCard: {
+      marginTop: 14,
+      padding: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    rankTitle: {
+      fontSize: 12.5,
+      color: colors.muted,
+      fontWeight: '600',
+      marginBottom: 12,
+    },
+    rankRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    rankRowSpacing: {
+      marginTop: 12,
+    },
+    rankNum: {
+      width: 20,
+      height: 20,
+      borderRadius: 7,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rankNumText: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: colors.primary,
+    },
+    rankEmoji: {
+      fontSize: 16,
+      width: 20,
+      textAlign: 'center',
+    },
+    rankName: {
+      fontSize: 13.5,
+      fontWeight: '700',
+      color: colors.text,
+      flex: 1,
+    },
+    rankBarTrack: {
+      flex: 1.4,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: colors.primarySoft,
+      overflow: 'hidden',
+    },
+    rankBarFill: {
+      height: '100%',
+      borderRadius: 4,
+      backgroundColor: colors.primary,
+    },
+    rankMeta: {
+      fontSize: 11,
+      color: colors.muted,
+      fontWeight: '600',
+      width: 44,
+      textAlign: 'right',
+    },
+    empty: {
+      marginTop: 20,
+      textAlign: 'center',
+      color: colors.muted,
+      fontSize: 14,
+    },
+  })
+}

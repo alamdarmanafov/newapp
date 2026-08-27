@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Dimensions,
@@ -16,7 +16,8 @@ import { useAuth } from '../authContext'
 import { DAILY_CHAT_MESSAGE_LIMIT, FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '../config'
 import { useLocale } from '../i18n/LocaleContext'
 import { supabase } from '../supabaseClient'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10)
@@ -25,6 +26,8 @@ function todayKey() {
 export default function ChatScreen() {
   const { session } = useAuth()
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const userId = session?.user.id
   const scrollRef = useRef<ScrollView>(null)
 
@@ -220,181 +223,183 @@ export default function ChatScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatarWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.soft,
-  },
-  avatarEmoji: {
-    fontSize: 19,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: colors.muted,
-    marginTop: 2,
-  },
-  remainingBadge: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-  },
-  remainingBadgeEmpty: {
-    backgroundColor: colors.surface,
-  },
-  remainingBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  remainingBadgeTextEmpty: {
-    color: colors.muted,
-  },
-  conversation: {
-    flex: 1,
-  },
-  conversationContent: {
-    padding: 20,
-    paddingBottom: 12,
-  },
-  conversationContentCentered: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-  },
-  emptyEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 13.5,
-    color: colors.muted,
-    textAlign: 'center',
-    maxWidth: 240,
-    lineHeight: 19,
-  },
-  userBubbleRow: {
-    alignItems: 'flex-end',
-    marginBottom: 14,
-  },
-  userBubble: {
-    maxWidth: '82%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    borderBottomRightRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    ...shadow.soft,
-  },
-  userBubbleText: {
-    color: '#ffffff',
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  aiBubbleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  aiAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  aiAvatarEmoji: {
-    fontSize: 13,
-  },
-  aiBubble: {
-    maxWidth: '78%',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    borderBottomLeftRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  aiBubbleLoading: {
-    paddingVertical: 14,
-  },
-  aiBubbleText: {
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  error: {
-    color: colors.danger,
-    fontSize: 13,
-    marginTop: 10,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    maxHeight: 100,
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.soft,
-  },
-  sendButtonDisabled: {
-    opacity: 0.4,
-  },
-  sendButtonIcon: {
-    color: '#ffffff',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    avatarWrap: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadow.soft,
+    },
+    avatarEmoji: {
+      fontSize: 19,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    subtitle: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 2,
+    },
+    remainingBadge: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 12,
+      backgroundColor: colors.primarySoft,
+    },
+    remainingBadgeEmpty: {
+      backgroundColor: colors.surface,
+    },
+    remainingBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    remainingBadgeTextEmpty: {
+      color: colors.muted,
+    },
+    conversation: {
+      flex: 1,
+    },
+    conversationContent: {
+      padding: 20,
+      paddingBottom: 12,
+    },
+    conversationContentCentered: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    emptyState: {
+      alignItems: 'center',
+    },
+    emptyEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
+    },
+    emptyText: {
+      fontSize: 13.5,
+      color: colors.muted,
+      textAlign: 'center',
+      maxWidth: 240,
+      lineHeight: 19,
+    },
+    userBubbleRow: {
+      alignItems: 'flex-end',
+      marginBottom: 14,
+    },
+    userBubble: {
+      maxWidth: '82%',
+      backgroundColor: colors.primary,
+      borderRadius: radius.xl,
+      borderBottomRightRadius: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      ...shadow.soft,
+    },
+    userBubbleText: {
+      color: '#ffffff',
+      fontSize: 15,
+      lineHeight: 21,
+    },
+    aiBubbleRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 8,
+    },
+    aiAvatar: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    aiAvatarEmoji: {
+      fontSize: 13,
+    },
+    aiBubble: {
+      maxWidth: '78%',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.xl,
+      borderBottomLeftRadius: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    aiBubbleLoading: {
+      paddingVertical: 14,
+    },
+    aiBubbleText: {
+      color: colors.text,
+      fontSize: 15,
+      lineHeight: 21,
+    },
+    error: {
+      color: colors.danger,
+      fontSize: 13,
+      marginTop: 10,
+    },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 10,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    input: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.xl,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: colors.text,
+      backgroundColor: colors.surface,
+      maxHeight: 100,
+    },
+    sendButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadow.soft,
+    },
+    sendButtonDisabled: {
+      opacity: 0.4,
+    },
+    sendButtonIcon: {
+      color: '#ffffff',
+      fontSize: 17,
+      fontWeight: '700',
+    },
+  })
+}

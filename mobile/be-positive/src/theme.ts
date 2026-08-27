@@ -1,4 +1,18 @@
-export const colors = {
+export interface ColorPalette {
+  primary: string
+  primaryDark: string
+  primarySoft: string
+  accent: string
+  background: string
+  surface: string
+  border: string
+  text: string
+  muted: string
+  danger: string
+  flame: string
+}
+
+export const lightColors: ColorPalette = {
   primary: '#2F8FE0',
   primaryDark: '#1C6FBB',
   primarySoft: '#EAF4FE',
@@ -12,8 +26,26 @@ export const colors = {
   flame: '#FF9F45',
 }
 
-// Mood intensity ramp — muted slate-blue (worst) to vivid blue (best), so the
-// whole check-in flow stays inside the white/light-blue palette.
+export const darkColors: ColorPalette = {
+  primary: '#2F8FE0',
+  primaryDark: '#1C6FBB',
+  primarySoft: '#16283f',
+  accent: '#2F8FE0',
+  background: '#0B1220',
+  surface: '#17243a',
+  border: '#223252',
+  text: '#EAF1FB',
+  muted: '#93A3BE',
+  danger: '#ff6b6b',
+  flame: '#FF9F45',
+}
+
+// Default export kept for any spot that isn't theme-aware yet — prefer
+// useTheme().colors everywhere a component renders.
+export const colors = lightColors
+
+// Mood intensity ramp — muted slate-blue (worst) to vivid blue (best). Kept
+// identical across themes so mood data reads consistently either way.
 export const MOOD_COLORS = ['#9AACC2', '#7EB8E0', '#5FA8E5', '#3B93E0', '#1C6FBB']
 
 export const radius = {

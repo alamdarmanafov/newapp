@@ -1,36 +1,42 @@
 import { useMemo } from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useLocale } from '../i18n/LocaleContext'
-import { LOCALE_OPTIONS } from '../i18n/content'
+import type { TranslationKey } from '../i18n/translations'
+import { useTheme, type ThemePreference } from '../themeContext'
 import { radius, shadow, type ColorPalette } from '../theme'
-import { useTheme } from '../themeContext'
 
-interface LanguagePickerModalProps {
+interface ThemePickerModalProps {
   visible: boolean
   onClose: () => void
 }
 
-export default function LanguagePickerModal({ visible, onClose }: LanguagePickerModalProps) {
-  const { locale, setLocale } = useLocale()
-  const { colors } = useTheme()
+const OPTIONS: { value: ThemePreference; labelKey: TranslationKey }[] = [
+  { value: 'light', labelKey: 'theme.light' },
+  { value: 'dark', labelKey: 'theme.dark' },
+  { value: 'system', labelKey: 'theme.system' },
+]
+
+export default function ThemePickerModal({ visible, onClose }: ThemePickerModalProps) {
+  const { t } = useLocale()
+  const { colors, preference, setPreference } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-          {LOCALE_OPTIONS.map((option) => {
-            const selected = option.code === locale
+          {OPTIONS.map((option) => {
+            const selected = option.value === preference
             return (
               <Pressable
-                key={option.code}
+                key={option.value}
                 style={styles.row}
                 onPress={() => {
-                  setLocale(option.code)
+                  setPreference(option.value)
                   onClose()
                 }}
               >
-                <Text style={[styles.rowText, selected && styles.rowTextSelected]}>{option.name}</Text>
+                <Text style={[styles.rowText, selected && styles.rowTextSelected]}>{t(option.labelKey)}</Text>
                 {selected && <Text style={styles.check}>✓</Text>}
               </Pressable>
             )

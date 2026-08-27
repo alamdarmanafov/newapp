@@ -4,7 +4,8 @@ import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg'
 import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
 import { MOOD_ORDER, moodLabel } from '../i18n/content'
-import { colors, MOOD_COLORS, radius, shadow } from '../theme'
+import { MOOD_COLORS, radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 const SIZE = 300
 const CX = 150
@@ -27,6 +28,8 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
   const [layout, setLayout] = useState({ width: SIZE, height: SIZE })
   const { session } = useAuth()
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const mood = MOOD_ORDER[value]
   const moodColor = MOOD_COLORS[value]
   const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
@@ -109,50 +112,52 @@ export default function CheckInScreen({ value, onChange, onContinue }: CheckInSc
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-  },
-  glow: {
-    position: 'absolute',
-    top: -60,
-    left: '10%',
-    width: '80%',
-    height: 320,
-    borderRadius: 999,
-  },
-  greeting: {
-    fontSize: 14,
-    color: colors.muted,
-  },
-  title: {
-    marginTop: 6,
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  gaugeWrap: {
-    marginTop: 20,
-  },
-  hint: {
-    marginTop: -40,
-    textAlign: 'center',
-    fontSize: 13,
-    color: colors.muted,
-  },
-  buttonRow: {
-    marginTop: 'auto',
-  },
-  primaryButton: {
-    paddingVertical: 16,
-    borderRadius: radius.xl,
-    alignItems: 'center',
-    ...shadow.card,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 24,
+    },
+    glow: {
+      position: 'absolute',
+      top: -60,
+      left: '10%',
+      width: '80%',
+      height: 320,
+      borderRadius: 999,
+    },
+    greeting: {
+      fontSize: 14,
+      color: colors.muted,
+    },
+    title: {
+      marginTop: 6,
+      fontSize: 26,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    gaugeWrap: {
+      marginTop: 20,
+    },
+    hint: {
+      marginTop: -40,
+      textAlign: 'center',
+      fontSize: 13,
+      color: colors.muted,
+    },
+    buttonRow: {
+      marginTop: 'auto',
+    },
+    primaryButton: {
+      paddingVertical: 16,
+      borderRadius: radius.xl,
+      alignItems: 'center',
+      ...shadow.card,
+    },
+    primaryButtonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+  })
+}

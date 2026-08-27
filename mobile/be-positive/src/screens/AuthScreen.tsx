@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Image,
@@ -17,7 +17,8 @@ import Svg, { Path } from 'react-native-svg'
 import { useLocale } from '../i18n/LocaleContext'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import { isAppleSignInAvailable, signInWithApple, signInWithGoogle, signInWithPassword } from '../socialAuth'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 function GoogleLogo() {
   return (
@@ -32,6 +33,8 @@ function GoogleLogo() {
 
 export default function AuthScreen() {
   const { t } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const [appleAvailable, setAppleAvailable] = useState(false)
   const [loading, setLoading] = useState<'apple' | 'google' | 'password' | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -160,158 +163,160 @@ export default function AuthScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-    overflow: 'hidden',
-  },
-  safe: {
-    flex: 1,
-  },
-  blob: {
-    position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: colors.primarySoft,
-  },
-  blobTop: {
-    width: 320,
-    height: 320,
-    top: -140,
-    right: -100,
-  },
-  blobBottom: {
-    width: 260,
-    height: 260,
-    bottom: -120,
-    left: -90,
-    backgroundColor: colors.surface,
-  },
-  languageRow: {
-    position: 'absolute',
-    top: 16,
-    right: 24,
-    zIndex: 1,
-  },
-  center: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 28,
-  },
-  logoWrap: {
-    width: 92,
-    height: 92,
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    marginBottom: 24,
-    backgroundColor: colors.background,
-    ...shadow.card,
-  },
-  logo: {
-    width: '100%',
-    height: '100%',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: colors.primary,
-    textAlign: 'center',
-    letterSpacing: 0.2,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 44,
-  },
-  errorBanner: {
-    width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#FDECEC',
-    borderRadius: radius.md,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 18,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 13,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  buttons: {
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
-    gap: 14,
-  },
-  appleButton: {
-    width: '100%',
-    height: 52,
-  },
-  googleButton: {
-    width: '100%',
-    height: 52,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#ffffff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    ...shadow.soft,
-  },
-  googleButtonText: {
-    color: colors.text,
-    fontSize: 15.5,
-    fontWeight: '700',
-  },
-  loadingRow: {
-    marginTop: 4,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginVertical: 6,
-    gap: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    fontSize: 12.5,
-    color: colors.muted,
-    fontWeight: '600',
-  },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  signInButton: {
-    width: '100%',
-    height: 52,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.soft,
-  },
-  signInButtonText: {
-    color: '#ffffff',
-    fontSize: 15.5,
-    fontWeight: '700',
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+      overflow: 'hidden',
+    },
+    safe: {
+      flex: 1,
+    },
+    blob: {
+      position: 'absolute',
+      borderRadius: 999,
+      backgroundColor: colors.primarySoft,
+    },
+    blobTop: {
+      width: 320,
+      height: 320,
+      top: -140,
+      right: -100,
+    },
+    blobBottom: {
+      width: 260,
+      height: 260,
+      bottom: -120,
+      left: -90,
+      backgroundColor: colors.surface,
+    },
+    languageRow: {
+      position: 'absolute',
+      top: 16,
+      right: 24,
+      zIndex: 1,
+    },
+    center: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 28,
+    },
+    logoWrap: {
+      width: 92,
+      height: 92,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+      marginBottom: 24,
+      backgroundColor: colors.background,
+      ...shadow.card,
+    },
+    logo: {
+      width: '100%',
+      height: '100%',
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: '800',
+      color: colors.primary,
+      textAlign: 'center',
+      letterSpacing: 0.2,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.muted,
+      textAlign: 'center',
+      marginTop: 8,
+      marginBottom: 44,
+    },
+    errorBanner: {
+      width: '100%',
+      maxWidth: 320,
+      backgroundColor: '#FDECEC',
+      borderRadius: radius.md,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginBottom: 18,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 13,
+      textAlign: 'center',
+      fontWeight: '600',
+    },
+    buttons: {
+      width: '100%',
+      maxWidth: 320,
+      alignItems: 'center',
+      gap: 14,
+    },
+    appleButton: {
+      width: '100%',
+      height: 52,
+    },
+    googleButton: {
+      width: '100%',
+      height: 52,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: '#ffffff',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      ...shadow.soft,
+    },
+    googleButtonText: {
+      color: colors.text,
+      fontSize: 15.5,
+      fontWeight: '700',
+    },
+    loadingRow: {
+      marginTop: 4,
+    },
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+      marginVertical: 6,
+      gap: 10,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    dividerText: {
+      fontSize: 12.5,
+      color: colors.muted,
+      fontWeight: '600',
+    },
+    input: {
+      width: '100%',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.lg,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      fontSize: 15,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    signInButton: {
+      width: '100%',
+      height: 52,
+      borderRadius: radius.lg,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadow.soft,
+    },
+    signInButtonText: {
+      color: '#ffffff',
+      fontSize: 15.5,
+      fontWeight: '700',
+    },
+  })
+}

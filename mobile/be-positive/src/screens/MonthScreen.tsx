@@ -3,7 +3,8 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import type { JournalEntry } from '../types'
 import { useLocale } from '../i18n/LocaleContext'
 import { DAY_LABELS, MONTH_NAMES, MOOD_META, MOOD_ORDER, moodScore } from '../i18n/content'
-import { colors, MOOD_COLORS, radius } from '../theme'
+import { MOOD_COLORS, radius, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 
 interface MonthScreenProps {
   entries: JournalEntry[]
@@ -27,6 +28,8 @@ function moodIndex(entry: JournalEntry) {
 
 export default function MonthScreen({ entries, onSelectEntry, onRefresh }: MonthScreenProps) {
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const dayLabels = DAY_LABELS[locale]
   const monthNames = MONTH_NAMES[locale]
   const [refreshing, setRefreshing] = useState(false)
@@ -139,130 +142,132 @@ export default function MonthScreen({ entries, onSelectEntry, onRefresh }: Month
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.muted,
-    marginBottom: 20,
-  },
-  calendarCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    backgroundColor: colors.background,
-  },
-  dayHeaderRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  dayHeader: {
-    width: '14.2857%',
-    textAlign: 'center',
-    fontSize: 10.5,
-    fontWeight: '700',
-    color: colors.muted,
-    paddingVertical: 8,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  cell: {
-    width: '14.2857%',
-    aspectRatio: 0.85,
-    alignItems: 'center',
-    paddingTop: 6,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  dayNumberWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayNumberWrapToday: {
-    backgroundColor: colors.primary,
-  },
-  dayNumber: {
-    fontSize: 12,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  dayNumberToday: {
-    color: '#ffffff',
-    fontWeight: '800',
-  },
-  dayEmojiSlot: {
-    marginTop: 4,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayEmoji: {
-    fontSize: 16,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  legendText: {
-    fontSize: 11.5,
-    color: colors.muted,
-  },
-  legendBar: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-  },
-  legendChip: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-  },
-  summaryCard: {
-    marginTop: 20,
-    padding: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  summaryTitle: {
-    fontSize: 15.5,
-    fontWeight: '700',
-    color: colors.text,
-    lineHeight: 21,
-  },
-  summarySubtitle: {
-    marginTop: 6,
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  empty: {
-    marginTop: 20,
-    textAlign: 'center',
-    color: colors.muted,
-    fontSize: 14,
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    content: {
+      padding: 20,
+      paddingBottom: 40,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: 13,
+      color: colors.muted,
+      marginBottom: 20,
+    },
+    calendarCard: {
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      backgroundColor: colors.background,
+    },
+    dayHeaderRow: {
+      flexDirection: 'row',
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    dayHeader: {
+      width: '14.2857%',
+      textAlign: 'center',
+      fontSize: 10.5,
+      fontWeight: '700',
+      color: colors.muted,
+      paddingVertical: 8,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    cell: {
+      width: '14.2857%',
+      aspectRatio: 0.85,
+      alignItems: 'center',
+      paddingTop: 6,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: colors.border,
+    },
+    dayNumberWrap: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayNumberWrapToday: {
+      backgroundColor: colors.primary,
+    },
+    dayNumber: {
+      fontSize: 12,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    dayNumberToday: {
+      color: '#ffffff',
+      fontWeight: '800',
+    },
+    dayEmojiSlot: {
+      marginTop: 4,
+      height: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayEmoji: {
+      fontSize: 16,
+    },
+    legendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 20,
+    },
+    legendText: {
+      fontSize: 11.5,
+      color: colors.muted,
+    },
+    legendBar: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 4,
+    },
+    legendChip: {
+      flex: 1,
+      height: 6,
+      borderRadius: 3,
+    },
+    summaryCard: {
+      marginTop: 20,
+      padding: 16,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    summaryTitle: {
+      fontSize: 15.5,
+      fontWeight: '700',
+      color: colors.text,
+      lineHeight: 21,
+    },
+    summarySubtitle: {
+      marginTop: 6,
+      fontSize: 12.5,
+      color: colors.muted,
+    },
+    empty: {
+      marginTop: 20,
+      textAlign: 'center',
+      color: colors.muted,
+      fontSize: 14,
+    },
+  })
+}

@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useLocale } from '../i18n/LocaleContext'
 import type { TranslationKey } from '../i18n/translations'
-import { colors } from '../theme'
+import { useTheme } from '../themeContext'
+import type { ColorPalette } from '../theme'
 
 export type TabKey = 'chat' | 'month' | 'places' | 'profile'
 
@@ -19,6 +21,8 @@ const TABS: { key: TabKey; labelKey: TranslationKey; icon: string }[] = [
 
 export default function TabBar({ tab, onChange }: TabBarProps) {
   const { t } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   return (
     <View style={styles.bar}>
@@ -36,41 +40,43 @@ export default function TabBar({ tab, onChange }: TabBarProps) {
   )
 }
 
-const styles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
-  },
-  icon: {
-    fontSize: 18,
-    opacity: 0.45,
-  },
-  iconActive: {
-    opacity: 1,
-  },
-  label: {
-    fontSize: 10.5,
-    color: colors.muted,
-    fontWeight: '600',
-  },
-  labelActive: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  dot: {
-    marginTop: 1,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.primary,
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    bar: {
+      flexDirection: 'row',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.background,
+      paddingTop: 10,
+      paddingBottom: 14,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 3,
+    },
+    icon: {
+      fontSize: 18,
+      opacity: 0.45,
+    },
+    iconActive: {
+      opacity: 1,
+    },
+    label: {
+      fontSize: 10.5,
+      color: colors.muted,
+      fontWeight: '600',
+    },
+    labelActive: {
+      color: colors.primary,
+      fontWeight: '700',
+    },
+    dot: {
+      marginTop: 1,
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.primary,
+    },
+  })
+}

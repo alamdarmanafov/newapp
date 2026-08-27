@@ -14,9 +14,9 @@ import OnboardingScreen from './src/screens/OnboardingScreen'
 import EntryDetailScreen from './src/screens/EntryDetailScreen'
 import { AuthProvider, useAuth } from './src/authContext'
 import { LocaleProvider } from './src/i18n/LocaleContext'
+import { ThemeProvider, useTheme } from './src/themeContext'
 import { computeStreak, deleteEntry, loadEntries, saveEntry, updateEntry } from './src/storage'
 import type { JournalEntry } from './src/types'
-import { colors } from './src/theme'
 
 const ONBOARDING_KEY = 'be-positive/onboarding-seen'
 
@@ -25,6 +25,7 @@ interface MainAppProps {
 }
 
 function MainApp({ userId }: MainAppProps) {
+  const { colors, scheme } = useTheme()
   const [tab, setTab] = useState<TabKey>('chat')
   const [showToday, setShowToday] = useState(true)
   const [entries, setEntries] = useState<JournalEntry[]>([])
@@ -71,19 +72,21 @@ function MainApp({ userId }: MainAppProps) {
     setEntries(refreshed)
   }, [userId])
 
+  const statusBarStyle = scheme === 'dark' ? 'light' : 'dark'
+
   if (showToday) {
     return (
-      <View style={styles.root}>
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
         <SafeAreaView style={styles.safe}>
           <TodayScreen entries={entries} onSave={handleSave} streak={streak} onDone={() => setShowToday(false)} />
         </SafeAreaView>
-        <StatusBar style="dark" />
+        <StatusBar style={statusBarStyle} />
       </View>
     )
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
           {tab === 'chat' && <ChatScreen />}
@@ -94,7 +97,7 @@ function MainApp({ userId }: MainAppProps) {
 
         <TabBar tab={tab} onChange={setTab} />
       </SafeAreaView>
-      <StatusBar style="dark" />
+      <StatusBar style={statusBarStyle} />
 
       <EntryDetailScreen
         entry={selectedEntry}
@@ -107,11 +110,12 @@ function MainApp({ userId }: MainAppProps) {
 }
 
 function Root() {
+  const { colors } = useTheme()
   const { session, loading } = useAuth()
 
   if (loading) {
     return (
-      <View style={styles.loadingRoot}>
+      <View style={[styles.loadingRoot, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     )
@@ -121,6 +125,7 @@ function Root() {
 }
 
 function AppBody() {
+  const { colors } = useTheme()
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -134,7 +139,7 @@ function AppBody() {
 
   if (onboardingSeen === null) {
     return (
-      <View style={styles.loadingRoot}>
+      <View style={[styles.loadingRoot, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     )
@@ -153,22 +158,22 @@ function AppBody() {
 
 export default function App() {
   return (
-    <LocaleProvider>
-      <AppBody />
-    </LocaleProvider>
+    <ThemeProvider>
+      <LocaleProvider>
+        <AppBody />
+      </LocaleProvider>
+    </ThemeProvider>
   )
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   loadingRoot: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background,
   },
   safe: {
     flex: 1,

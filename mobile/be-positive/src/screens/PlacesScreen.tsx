@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import MapView, { Circle, PROVIDER_GOOGLE, type Region } from 'react-native-maps'
 import * as Location from 'expo-location'
@@ -6,13 +6,16 @@ import PlaceMoodModal from '../components/PlaceMoodModal'
 import { PLACE_CATEGORIES } from '../i18n/content'
 import { useLocale } from '../i18n/LocaleContext'
 import { fetchPlaceAggregates, submitPlaceMood, type PlaceAggregate } from '../places'
-import { colors, MOOD_COLORS, radius, shadow } from '../theme'
+import { MOOD_COLORS, radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 import type { MoodKey } from '../types'
 
 const DEFAULT_DELTA = 0.03
 
 export default function PlacesScreen() {
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const [region, setRegion] = useState<Region | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [aggregates, setAggregates] = useState<PlaceAggregate[]>([])
@@ -176,137 +179,139 @@ export default function PlacesScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    marginTop: 3,
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  filterScroll: {
-    flexGrow: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  filterRow: {
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  filterChipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-  },
-  filterEmoji: {
-    fontSize: 14,
-  },
-  filterLabel: {
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: colors.muted,
-  },
-  filterLabelSelected: {
-    color: colors.primary,
-  },
-  mapArea: {
-    flex: 1,
-    position: 'relative',
-  },
-  map: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 28,
-  },
-  centerEmoji: {
-    fontSize: 44,
-    marginBottom: 16,
-  },
-  centerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  centerBody: {
-    marginTop: 8,
-    fontSize: 13.5,
-    color: colors.muted,
-    textAlign: 'center',
-    lineHeight: 19,
-  },
-  settingsButton: {
-    marginTop: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-    ...shadow.soft,
-  },
-  settingsButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 14.5,
-  },
-  emptyBanner: {
-    position: 'absolute',
-    top: 16,
-    left: 20,
-    right: 20,
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    ...shadow.soft,
-  },
-  emptyBannerText: {
-    fontSize: 12.5,
-    color: colors.muted,
-    textAlign: 'center',
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 24,
-    alignSelf: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 24,
-    borderRadius: radius.xl,
-    backgroundColor: colors.primary,
-    ...shadow.card,
-  },
-  addButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    subtitle: {
+      marginTop: 3,
+      fontSize: 12.5,
+      color: colors.muted,
+    },
+    filterScroll: {
+      flexGrow: 0,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    filterRow: {
+      gap: 8,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    filterChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    filterChipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primarySoft,
+    },
+    filterEmoji: {
+      fontSize: 14,
+    },
+    filterLabel: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.muted,
+    },
+    filterLabelSelected: {
+      color: colors.primary,
+    },
+    mapArea: {
+      flex: 1,
+      position: 'relative',
+    },
+    map: {
+      flex: 1,
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 28,
+    },
+    centerEmoji: {
+      fontSize: 44,
+      marginBottom: 16,
+    },
+    centerTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    centerBody: {
+      marginTop: 8,
+      fontSize: 13.5,
+      color: colors.muted,
+      textAlign: 'center',
+      lineHeight: 19,
+    },
+    settingsButton: {
+      marginTop: 20,
+      paddingVertical: 14,
+      paddingHorizontal: 28,
+      borderRadius: radius.lg,
+      backgroundColor: colors.primary,
+      ...shadow.soft,
+    },
+    settingsButtonText: {
+      color: '#ffffff',
+      fontWeight: '700',
+      fontSize: 14.5,
+    },
+    emptyBanner: {
+      position: 'absolute',
+      top: 16,
+      left: 20,
+      right: 20,
+      backgroundColor: colors.background,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      ...shadow.soft,
+    },
+    emptyBannerText: {
+      fontSize: 12.5,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+    addButton: {
+      position: 'absolute',
+      bottom: 24,
+      alignSelf: 'center',
+      paddingVertical: 15,
+      paddingHorizontal: 24,
+      borderRadius: radius.xl,
+      backgroundColor: colors.primary,
+      ...shadow.card,
+    },
+    addButtonText: {
+      color: '#ffffff',
+      fontWeight: '700',
+      fontSize: 15,
+    },
+  })
+}

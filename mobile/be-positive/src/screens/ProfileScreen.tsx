@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   StyleSheet,
   Switch,
   Text,
@@ -22,12 +23,14 @@ import AchievementsModal from '../components/AchievementsModal'
 import InsightsModal from '../components/InsightsModal'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
+import ThemePickerModal from '../components/ThemePickerModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
 import { computeStreak } from '../storage'
 import { uploadAvatar } from '../avatar'
 import { cancelWeeklyRecap, scheduleWeeklyRecap } from '../weeklyRecap'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 import type { JournalEntry } from '../types'
 
 interface ProfileScreenProps {
@@ -40,11 +43,14 @@ const appVersion = Constants.expoConfig?.version ?? '1.0.0'
 export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps) {
   const { session, signOut, deleteAccount, updateAvatarUrl } = useAuth()
   const { t, locale } = useLocale()
+  const { colors, preference: themePreference } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const userId = session?.user.id
   const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
   const avatarUrl = session?.user.user_metadata?.avatar_url as string | undefined
   const [remindersOn, setRemindersOn] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
+  const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [insightsModalOpen, setInsightsModalOpen] = useState(false)
   const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
@@ -53,6 +59,7 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
+  const currentThemeName = t(`theme.${themePreference}` as 'theme.light' | 'theme.dark' | 'theme.system')
   const streak = useMemo(() => computeStreak(entries), [entries])
 
   useEffect(() => {
@@ -133,6 +140,10 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
     } finally {
       setAvatarUploading(false)
     }
+  }
+
+  const handleShare = () => {
+    Share.share({ message: t('profile.shareMessage') })
   }
 
   const toggleReminders = async (value: boolean) => {
@@ -217,6 +228,14 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
           />
         </View>
 
+        <Pressable style={styles.settingRow} onPress={() => setThemePickerOpen(true)}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('profile.theme')}</Text>
+          </View>
+          <Text style={styles.languageValue}>{currentThemeName}</Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+
         <Pressable style={styles.settingRow} onPress={() => setLanguagePickerOpen(true)}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingLabel}>{t('profile.language')}</Text>
@@ -229,6 +248,13 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
           <View style={{ flex: 1 }}>
             <Text style={styles.settingLabel}>{t('profile.password')}</Text>
             <Text style={styles.settingHint}>{t('profile.passwordHint')}</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+
+        <Pressable style={styles.settingRow} onPress={handleShare}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('profile.share')}</Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
@@ -261,6 +287,7 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
       </Text>
 
       <LanguagePickerModal visible={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
+      <ThemePickerModal visible={themePickerOpen} onClose={() => setThemePickerOpen(false)} />
       <PasswordModal visible={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
       <InsightsModal
         visible={insightsModalOpen}
@@ -278,175 +305,177 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  container: {
-    flexGrow: 1,
-    alignItems: 'center',
-    padding: 28,
-    paddingTop: 48,
-    paddingBottom: 40,
-  },
-  avatarWrap: {
-    width: 108,
-    height: 108,
-  },
-  avatar: {
-    width: 108,
-    height: 108,
-    borderRadius: 54,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    ...shadow.card,
-  },
-  avatarText: {
-    color: colors.accent,
-    fontSize: 42,
-    fontWeight: '800',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 54,
-  },
-  avatarEditBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.primaryDark,
-    borderWidth: 2,
-    borderColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarEditIcon: {
-    fontSize: 14,
-  },
-  streakPill: {
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  streakPillIcon: {
-    fontSize: 14,
-  },
-  streakPillText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.flame,
-  },
-  email: {
-    marginTop: 20,
-    fontSize: 19,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  emailSub: {
-    marginTop: 3,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  memberSince: {
-    marginTop: 6,
-    fontSize: 13.5,
-    color: colors.muted,
-  },
-  settingsGroup: {
-    width: '100%',
-    marginTop: 28,
-    gap: 14,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 20,
-    borderRadius: radius.xl,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  settingLabel: {
-    fontSize: 15.5,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  settingHint: {
-    marginTop: 4,
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  languageValue: {
-    fontSize: 14.5,
-    color: colors.muted,
-    fontWeight: '600',
-    marginRight: 4,
-  },
-  chevron: {
-    fontSize: 20,
-    color: colors.muted,
-  },
-  signOutButton: {
-    marginTop: 40,
-    paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.danger,
-  },
-  signOutText: {
-    color: colors.danger,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  deleteAccountButton: {
-    marginTop: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    minHeight: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteAccountText: {
-    color: colors.muted,
-    fontWeight: '600',
-    fontSize: 13.5,
-    textDecorationLine: 'underline',
-  },
-  legalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 28,
-  },
-  legalLink: {
-    fontSize: 12.5,
-    color: colors.muted,
-    textDecorationLine: 'underline',
-  },
-  legalDot: {
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  versionText: {
-    marginTop: 6,
-    marginBottom: 12,
-    fontSize: 12,
-    color: colors.muted,
-    opacity: 0.7,
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    container: {
+      flexGrow: 1,
+      alignItems: 'center',
+      padding: 28,
+      paddingTop: 48,
+      paddingBottom: 40,
+    },
+    avatarWrap: {
+      width: 108,
+      height: 108,
+    },
+    avatar: {
+      width: 108,
+      height: 108,
+      borderRadius: 54,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      ...shadow.card,
+    },
+    avatarText: {
+      color: colors.accent,
+      fontSize: 42,
+      fontWeight: '800',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 54,
+    },
+    avatarEditBadge: {
+      position: 'absolute',
+      bottom: -2,
+      right: -2,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: colors.primaryDark,
+      borderWidth: 2,
+      borderColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarEditIcon: {
+      fontSize: 14,
+    },
+    streakPill: {
+      marginTop: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    streakPillIcon: {
+      fontSize: 14,
+    },
+    streakPillText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.flame,
+    },
+    email: {
+      marginTop: 20,
+      fontSize: 19,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    emailSub: {
+      marginTop: 3,
+      fontSize: 13,
+      color: colors.muted,
+    },
+    memberSince: {
+      marginTop: 6,
+      fontSize: 13.5,
+      color: colors.muted,
+    },
+    settingsGroup: {
+      width: '100%',
+      marginTop: 28,
+      gap: 14,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+      padding: 20,
+      borderRadius: radius.xl,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    settingLabel: {
+      fontSize: 15.5,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    settingHint: {
+      marginTop: 4,
+      fontSize: 12.5,
+      color: colors.muted,
+    },
+    languageValue: {
+      fontSize: 14.5,
+      color: colors.muted,
+      fontWeight: '600',
+      marginRight: 4,
+    },
+    chevron: {
+      fontSize: 20,
+      color: colors.muted,
+    },
+    signOutButton: {
+      marginTop: 40,
+      paddingVertical: 16,
+      paddingHorizontal: 40,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.danger,
+    },
+    signOutText: {
+      color: colors.danger,
+      fontWeight: '700',
+      fontSize: 15,
+    },
+    deleteAccountButton: {
+      marginTop: 14,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      minHeight: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    deleteAccountText: {
+      color: colors.muted,
+      fontWeight: '600',
+      fontSize: 13.5,
+      textDecorationLine: 'underline',
+    },
+    legalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 28,
+    },
+    legalLink: {
+      fontSize: 12.5,
+      color: colors.muted,
+      textDecorationLine: 'underline',
+    },
+    legalDot: {
+      fontSize: 12.5,
+      color: colors.muted,
+    },
+    versionText: {
+      marginTop: 6,
+      marginBottom: 12,
+      fontSize: 12,
+      color: colors.muted,
+      opacity: 0.7,
+    },
+  })
+}

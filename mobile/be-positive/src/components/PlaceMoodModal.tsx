@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { MOOD_META, MOOD_ORDER, PLACE_CATEGORIES } from '../i18n/content'
 import { useLocale } from '../i18n/LocaleContext'
-import { colors, radius, shadow } from '../theme'
+import { radius, shadow, type ColorPalette } from '../theme'
+import { useTheme } from '../themeContext'
 import type { MoodKey } from '../types'
 
 interface PlaceMoodModalProps {
@@ -14,6 +15,8 @@ interface PlaceMoodModalProps {
 
 export default function PlaceMoodModal({ visible, submitting, onSubmit, onClose }: PlaceMoodModalProps) {
   const { t, locale } = useLocale()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const [selected, setSelected] = useState<MoodKey | null>(null)
   const [category, setCategory] = useState(PLACE_CATEGORIES[0].id)
 
@@ -76,118 +79,120 @@ export default function PlaceMoodModal({ visible, submitting, onSubmit, onClose 
   )
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(18, 35, 61, 0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: 24,
-    paddingBottom: 34,
-    ...shadow.card,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.muted,
-    marginBottom: 18,
-  },
-  sectionLabel: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-    marginBottom: 10,
-  },
-  categoryScroll: {
-    marginBottom: 20,
-  },
-  categoryRow: {
-    gap: 8,
-    paddingRight: 4,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  categoryChipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-  },
-  categoryEmoji: {
-    fontSize: 15,
-  },
-  categoryLabel: {
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: colors.muted,
-  },
-  categoryLabelSelected: {
-    color: colors.primary,
-  },
-  moodRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 6,
-  },
-  moodButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  moodButtonSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-  },
-  moodEmoji: {
-    fontSize: 24,
-  },
-  moodLabel: {
-    marginTop: 6,
-    fontSize: 10.5,
-    color: colors.muted,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  moodLabelSelected: {
-    color: colors.primary,
-  },
-  submitButton: {
-    marginTop: 20,
-    height: 52,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.soft,
-  },
-  submitButtonDisabled: {
-    opacity: 0.4,
-  },
-  submitText: {
-    color: '#ffffff',
-    fontSize: 15.5,
-    fontWeight: '700',
-  },
-})
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(18, 35, 61, 0.35)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      padding: 24,
+      paddingBottom: 34,
+      ...shadow.card,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: 13,
+      color: colors.muted,
+      marginBottom: 18,
+    },
+    sectionLabel: {
+      fontSize: 11.5,
+      fontWeight: '700',
+      color: colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+      marginBottom: 10,
+    },
+    categoryScroll: {
+      marginBottom: 20,
+    },
+    categoryRow: {
+      gap: 8,
+      paddingRight: 4,
+    },
+    categoryChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 9,
+      paddingHorizontal: 14,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    categoryChipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primarySoft,
+    },
+    categoryEmoji: {
+      fontSize: 15,
+    },
+    categoryLabel: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.muted,
+    },
+    categoryLabelSelected: {
+      color: colors.primary,
+    },
+    moodRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 6,
+    },
+    moodButton: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    moodButtonSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primarySoft,
+    },
+    moodEmoji: {
+      fontSize: 24,
+    },
+    moodLabel: {
+      marginTop: 6,
+      fontSize: 10.5,
+      color: colors.muted,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    moodLabelSelected: {
+      color: colors.primary,
+    },
+    submitButton: {
+      marginTop: 20,
+      height: 52,
+      borderRadius: radius.lg,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadow.soft,
+    },
+    submitButtonDisabled: {
+      opacity: 0.4,
+    },
+    submitText: {
+      color: '#ffffff',
+      fontSize: 15.5,
+      fontWeight: '700',
+    },
+  })
+}
