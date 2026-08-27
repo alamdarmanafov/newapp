@@ -189,13 +189,6 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         </View>
       )}
 
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{entries.length}</Text>
-          <Text style={styles.statLabel}>{t('profile.entriesLabel')}</Text>
-        </View>
-      </View>
-
       <View style={styles.settingsGroup}>
         <Pressable style={styles.settingRow} onPress={() => setInsightsModalOpen(true)}>
           <View style={{ flex: 1 }}>
@@ -371,32 +364,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 13.5,
     color: colors.muted,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginTop: 32,
-    width: '100%',
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    paddingVertical: 28,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statValue: {
-    fontSize: 34,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  statLabel: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.muted,
-    fontWeight: '600',
   },
   settingsGroup: {
     width: '100%',
