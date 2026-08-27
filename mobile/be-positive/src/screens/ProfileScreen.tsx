@@ -6,7 +6,7 @@ import { useLocale } from '../i18n/LocaleContext'
 import { FUNCTIONS_BASE_URL } from '../config'
 import { LOCALE_OPTIONS } from '../i18n/content'
 import AchievementsModal from '../components/AchievementsModal'
-import InsightsSection from '../components/InsightsSection'
+import InsightsModal from '../components/InsightsModal'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
 import { countUnlockedAchievements } from '../achievements'
@@ -32,6 +32,7 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   const [remindersOn, setRemindersOn] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+  const [insightsModalOpen, setInsightsModalOpen] = useState(false)
   const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -131,9 +132,15 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         </View>
       </View>
 
-      <InsightsSection entries={entries} placeStats={placeStats} />
-
       <View style={styles.settingsGroup}>
+        <Pressable style={styles.settingRow} onPress={() => setInsightsModalOpen(true)}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('insights.title')}</Text>
+            <Text style={styles.settingHint}>{t('insights.subtitle')}</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+
         <Pressable style={styles.settingRow} onPress={() => setAchievementsModalOpen(true)}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingLabel}>{t('achievements.title')}</Text>
@@ -202,6 +209,12 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
 
       <LanguagePickerModal visible={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
       <PasswordModal visible={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
+      <InsightsModal
+        visible={insightsModalOpen}
+        onClose={() => setInsightsModalOpen(false)}
+        entries={entries}
+        placeStats={placeStats}
+      />
       <AchievementsModal
         visible={achievementsModalOpen}
         onClose={() => setAchievementsModalOpen(false)}

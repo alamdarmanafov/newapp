@@ -21,6 +21,7 @@ import { colors, MOOD_COLORS, radius, shadow } from '../theme'
 interface InsightsSectionProps {
   entries: JournalEntry[]
   placeStats: MyPlaceCategoryStat[]
+  showHeader?: boolean
 }
 
 function moodIndex(entry: JournalEntry) {
@@ -33,7 +34,7 @@ function startOfDay(date: Date) {
   return d
 }
 
-export default function InsightsSection({ entries, placeStats }: InsightsSectionProps) {
+export default function InsightsSection({ entries, placeStats, showHeader = true }: InsightsSectionProps) {
   const { t, locale } = useLocale()
   const dayLabels = DAY_LABELS[locale]
 
@@ -166,9 +167,9 @@ export default function InsightsSection({ entries, placeStats }: InsightsSection
   const path = validPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.sectionTitle}>{t('insights.title')}</Text>
-      <Text style={styles.sectionSubtitle}>{t('insights.subtitle')}</Text>
+    <View style={[styles.root, !showHeader && styles.rootCompact]}>
+      {showHeader && <Text style={styles.sectionTitle}>{t('insights.title')}</Text>}
+      {showHeader && <Text style={styles.sectionSubtitle}>{t('insights.subtitle')}</Text>}
 
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
@@ -323,6 +324,9 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     marginTop: 28,
+  },
+  rootCompact: {
+    marginTop: 0,
   },
   sectionTitle: {
     fontSize: 17,
