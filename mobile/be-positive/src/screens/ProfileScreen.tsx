@@ -1,5 +1,18 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
 import Constants from 'expo-constants'
 import { useAuth } from '../authContext'
 import { useLocale } from '../i18n/LocaleContext'
@@ -11,6 +24,8 @@ import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
+import { computeStreak } from '../storage'
+import { uploadAvatar } from '../avatar'
 import { cancelWeeklyRecap, scheduleWeeklyRecap } from '../weeklyRecap'
 import { colors, radius, shadow } from '../theme'
 import type { JournalEntry } from '../types'
@@ -23,10 +38,11 @@ interface ProfileScreenProps {
 const appVersion = Constants.expoConfig?.version ?? '1.0.0'
 
 export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps) {
-  const { session, signOut, deleteAccount } = useAuth()
+  const { session, signOut, deleteAccount, updateAvatarUrl } = useAuth()
   const { t, locale } = useLocale()
   const userId = session?.user.id
   const name = (session?.user.user_metadata?.full_name as string | undefined)?.trim()
+  const avatarUrl = session?.user.user_metadata?.avatar_url as string | undefined
   const [remindersOn, setRemindersOn] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
@@ -34,8 +50,10 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
+  const streak = useMemo(() => computeStreak(entries), [entries])
 
   useEffect(() => {
     if (userId) areNotificationsEnabled(userId).then(setRemindersOn)
@@ -90,6 +108,33 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
     ])
   }
 
+  const handlePickAvatar = async () => {
+    if (!userId) return
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!permission.granted) {
+      Alert.alert(t('profile.avatarPermissionTitle'), t('profile.avatarPermissionBody'))
+      return
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    })
+    if (result.canceled || !result.assets?.[0]) return
+
+    setAvatarUploading(true)
+    try {
+      const url = await uploadAvatar(userId, result.assets[0].uri)
+      await updateAvatarUrl(url)
+    } catch {
+      Alert.alert(t('profile.avatarError'))
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
   const toggleReminders = async (value: boolean) => {
     if (!userId) return
     if (value) {
@@ -112,15 +157,37 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
       contentContainerStyle={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
     >
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{(name || session?.user.email || '?').charAt(0).toUpperCase()}</Text>
-      </View>
+      <Pressable style={styles.avatarWrap} onPress={handlePickAvatar} disabled={avatarUploading}>
+        <View style={styles.avatar}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{(name || session?.user.email || '?').charAt(0).toUpperCase()}</Text>
+          )}
+        </View>
+        <View style={styles.avatarEditBadge}>
+          {avatarUploading ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <Text style={styles.avatarEditIcon}>📷</Text>
+          )}
+        </View>
+      </Pressable>
 
       <Text style={styles.email}>{name || session?.user.email}</Text>
       {name && <Text style={styles.emailSub}>{session?.user.email}</Text>}
       <Text style={styles.memberSince}>
         {t('profile.memberSince')}: {memberSince}
       </Text>
+
+      {streak > 0 && (
+        <View style={styles.streakPill}>
+          <Text style={styles.streakPillIcon}>🔥</Text>
+          <Text style={styles.streakPillText}>
+            {streak} {t('saved.streakSuffix')}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
@@ -229,6 +296,10 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 40,
   },
+  avatarWrap: {
+    width: 108,
+    height: 108,
+  },
   avatar: {
     width: 108,
     height: 108,
@@ -236,12 +307,54 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     ...shadow.card,
   },
   avatarText: {
     color: colors.accent,
     fontSize: 42,
     fontWeight: '800',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 54,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primaryDark,
+    borderWidth: 2,
+    borderColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarEditIcon: {
+    fontSize: 14,
+  },
+  streakPill: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  streakPillIcon: {
+    fontSize: 14,
+  },
+  streakPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.flame,
   },
   email: {
     marginTop: 20,

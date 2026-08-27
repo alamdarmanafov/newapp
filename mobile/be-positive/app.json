@@ -48,7 +48,15 @@
           "locationWhenInUsePermission": "Bu yerdə əhval-ruhiyyəni xəritəyə əlavə etmək üçün məkanından istifadə olunur."
         }
       ],
-      "react-native-maps"
+      "react-native-maps",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Profil şəklini seçmək üçün fotolarına giriş lazımdır.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "extra": {
       "eas": {

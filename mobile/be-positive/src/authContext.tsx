@@ -10,6 +10,7 @@ interface AuthContextValue {
   loading: boolean
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
+  updateAvatarUrl: (url: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -54,7 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }
 
-  return <AuthContext.Provider value={{ session, loading, signOut, deleteAccount }}>{children}</AuthContext.Provider>
+  const updateAvatarUrl = async (url: string) => {
+    const { data, error } = await supabase.auth.updateUser({ data: { avatar_url: url } })
+    if (error) throw error
+    setSession(data.user ? { ...session!, user: data.user } : session)
+  }
+
+  return (
+    <AuthContext.Provider value={{ session, loading, signOut, deleteAccount, updateAvatarUrl }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
