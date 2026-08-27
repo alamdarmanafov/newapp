@@ -9,8 +9,6 @@ import AchievementsModal from '../components/AchievementsModal'
 import InsightsModal from '../components/InsightsModal'
 import LanguagePickerModal from '../components/LanguagePickerModal'
 import PasswordModal from '../components/PasswordModal'
-import { countUnlockedAchievements } from '../achievements'
-import { ACHIEVEMENT_DEFS } from '../i18n/content'
 import { areNotificationsEnabled, disableDailyReminders, enableDailyReminders, updatePushTokenLanguage } from '../notifications'
 import { fetchMyPlaceCategoryStats, type MyPlaceCategoryStat } from '../places'
 import { cancelWeeklyRecap, scheduleWeeklyRecap } from '../weeklyRecap'
@@ -37,7 +35,6 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
   const [deleting, setDeleting] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [placeStats, setPlaceStats] = useState<MyPlaceCategoryStat[]>([])
-  const unlockedAchievements = countUnlockedAchievements(entries, placeStats)
   const currentLanguageName = LOCALE_OPTIONS.find((option) => option.code === locale)?.name ?? locale
 
   useEffect(() => {
@@ -136,7 +133,6 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         <Pressable style={styles.settingRow} onPress={() => setInsightsModalOpen(true)}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingLabel}>{t('insights.title')}</Text>
-            <Text style={styles.settingHint}>{t('insights.subtitle')}</Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
@@ -144,9 +140,6 @@ export default function ProfileScreen({ entries, onRefresh }: ProfileScreenProps
         <Pressable style={styles.settingRow} onPress={() => setAchievementsModalOpen(true)}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingLabel}>{t('achievements.title')}</Text>
-            <Text style={styles.settingHint}>
-              {t('achievements.unlockedCount', { unlocked: unlockedAchievements, total: ACHIEVEMENT_DEFS.length })}
-            </Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
