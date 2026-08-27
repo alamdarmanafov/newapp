@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import MapView, { Circle, type Region } from 'react-native-maps'
+import MapView, { Circle, PROVIDER_GOOGLE, type Region } from 'react-native-maps'
 import * as Location from 'expo-location'
 import PlaceMoodModal from '../components/PlaceMoodModal'
 import { PLACE_CATEGORIES } from '../i18n/content'
@@ -137,7 +137,13 @@ export default function PlacesScreen() {
       </ScrollView>
 
       <View style={styles.mapArea}>
-        <MapView style={styles.map} initialRegion={region} onRegionChangeComplete={handleRegionChangeComplete} showsUserLocation>
+        <MapView
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          initialRegion={region}
+          onRegionChangeComplete={handleRegionChangeComplete}
+          showsUserLocation
+        >
           {aggregates.map((agg) => (
             <Circle
               key={`${agg.gridLat}-${agg.gridLng}`}
